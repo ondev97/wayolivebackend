@@ -4,12 +4,12 @@ from .models import *
 
 class ConcertSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Concert
+        model = EventMode
         fields = '__all__'
 
 class ConcertListSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Concert
+        model = EventMode
         fields = '__all__'
 
         depth = 2

@@ -1,6 +1,10 @@
+import os
+
+from django.core.files.base import ContentFile
 from django.db import models
 from django.contrib.auth.models import AbstractUser
-
+from io import BytesIO
+from PIL import Image
 
 
 # Create your models here.
@@ -16,21 +20,52 @@ class User(AbstractUser):
 
 
 class BandProfile(models.Model):
+    def upload_location(instance, filename):
+        return "band_images/%s/%s" % (instance.user.username, filename)
+
     user = models.OneToOneField(User,on_delete=models.CASCADE)
     band_description = models.TextField()
-    band_image = models.ImageField(null=True,blank=True)
+    band_image = models.ImageField(null=True,blank=True, upload_to=upload_location)
 
     def __str__(self):
         return self.user.username
+
+    def save(self, *args, **kwargs):
+        if self.band_image:
+            im = Image.open(self.band_image)
+            im = im.convert('RGB')
+            # create a BytesIO object
+            im_io = BytesIO()
+            # save image to BytesIO object
+            im.save(im_io, 'JPEG', quality=20)
+            temp_name = os.path.split(self.band_image.name)[1]
+            self.band_image.save(temp_name, content=ContentFile(im_io.getvalue()), save=False)
+            super().save(*args, **kwargs)
 
 
 class UserProfile(models.Model):
-    user = models.OneToOneField(User,on_delete=models.CASCADE)
+    def upload_location(instance, filename):
+        return "user_images/%s/%s" % (instance.user.username, filename)
+
+
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
     user_description = models.TextField()
-    user_image = models.ImageField(null=True,blank=True)
+    user_image = models.ImageField(null=True,blank=True, upload_to=upload_location)
 
     def __str__(self):
         return self.user.username
+
+    def save(self, *args, **kwargs):
+        if self.user_image:
+            im = Image.open(self.user_image)
+            im = im.convert('RGB')
+            # create a BytesIO object
+            im_io = BytesIO()
+            # save image to BytesIO object
+            im.save(im_io, 'JPEG', quality=20)
+            temp_name = os.path.split(self.user_image.name)[1]
+            self.user_image.save(temp_name, content=ContentFile(im_io.getvalue()), save=False)
+            super().save(*args, **kwargs)
 
 
 @receiver(post_save, sender=User)

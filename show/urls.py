@@ -3,13 +3,13 @@ from . import views
 
 urlpatterns = [
 
-    # concert urls
+    # event mode urls
 
-    path('createconcert/',views.createconcert),
-    path('listconcert/',views.listconcert),
-    path('viewconcert/<int:pk>/',views.viewconcert),
-    path('updateconcert/<int:pk>/',views.updateconcert),
-    path('deleteconcert/<int:pk>/',views.deleteconcert),
+    path('createeventmode/', views.createeventmode),
+    path('listeventmode/', views.listeventmode),
+    path('vieweventmode/<int:pk>/', views.vieweventmode),
+    path('updateeventmode/<int:pk>/', views.updateeventmode),
+    path('deleteeventmode/<int:pk>/', views.deleteeventmode),
 
 
     # event urls
@@ -29,10 +29,10 @@ urlpatterns = [
 
     # adding to the concert
 
-    path('addtoconcert/<int:pk>/',views.addtoconcert),
-    path('addtoconcertbyband/<int:pk>/',views.addtoconcertbyband),
-    path('freeconcert/<int:cid>/',views.freeentry),
-    path('remove/<int:cid>/<int:uid>/',views.removefromconcert),
+    path('addtoevent/<int:eid>/', views.addtoevent),
+    path('addtoeventbyband/<int:eid>/', views.addtoeventbyband),
+    path('freeconcert/<int:eid>/',views.freeentry),
+    path('remove/<int:eid>/<int:uid>/', views.removefromevent),
 
 
 

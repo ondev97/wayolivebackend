@@ -37,7 +37,7 @@ from .models import *
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def createevent(request,pk):
-    concert = Concert.objects.get(id=pk)
+    concert = EventMode.objects.get(id=pk)
     event = Event(concert=concert)
     serializer = EventSerializer(event, data=request.data)
     if serializer.is_valid():
@@ -49,7 +49,7 @@ def createevent(request,pk):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def listevent(request,pk):
-    concert = Concert.objects.get(id=pk)
+    concert = EventMode.objects.get(id=pk)
     events = Event.objects.filter(concert__id=concert.id)
     serializer = EventSerializer(events, many=True)
     return Response(serializer.data)
@@ -82,9 +82,9 @@ def deletevent(request,pk):
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
-def createconcert(request):
+def createeventmode(request):
     band = BandProfile.objects.get(user=request.user)
-    concert = Concert(band=band)
+    concert = EventMode(band=band)
     serializer = ConcertSerializer(concert, data=request.data)
     if serializer.is_valid():
         serializer.save()
@@ -94,23 +94,24 @@ def createconcert(request):
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
-def listconcert(request):
-    concerts = Concert.objects.all()
-    serializer = ConcertListSerializer(concerts, many=True)
+def listeventmode(request):
+    band = BandProfile.objects.get(user=request.user)
+    eventmodes = EventMode.objects.filter(band=band)
+    serializer = ConcertListSerializer(eventmodes, many=True)
     return Response(serializer.data)
 
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
-def viewconcert(request,pk):
-    concert = Concert.objects.get(id=pk)
+def vieweventmode(request, pk):
+    concert = EventMode.objects.get(id=pk)
     serializer = ConcertListSerializer(concert)
     return Response(serializer.data)
 
 @api_view(['PUT'])
 @permission_classes([IsAuthenticated])
-def updateconcert(request,pk):
-    concert = Concert.objects.get(id=pk)
+def updateeventmode(request, pk):
+    concert = EventMode.objects.get(id=pk)
     serializer = ConcertSerializer(instance=concert,data=request.data)
     if serializer.is_valid():
         serializer.save()
@@ -119,20 +120,20 @@ def updateconcert(request,pk):
 
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated])
-def deleteconcert(request,pk):
-    concert = Concert.objects.get(id=pk)
+def deleteeventmode(request, pk):
+    concert = EventMode.objects.get(id=pk)
     concert.delete()
-    return Response({"message": "Concert Successfully Deleted"})
+    return Response({"message": "Event mode successfully deleted"})
 
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def ticketgenerator(request, count, pk):
-    concert = Concert.objects.filter(id=pk).first()
+    event = Event.objects.filter(id=pk).first()
     try:
         Ticket.objects.bulk_create(
             [
-                Ticket(concert=concert, ticket_number="")
+                Ticket(event=event, ticket_number="")
                 for __ in range(count)
             ]
         )
@@ -140,7 +141,7 @@ def ticketgenerator(request, count, pk):
         for t in list(TicketList):
             serializer = TicketSerializer(instance=t, data=request.data)
             if serializer.is_valid():
-                ticket = str(t.id) + ":" + str(t.concert.id)
+                ticket = str(t.id) + ":" + str(t.event.id)
                 ticket_number = hashlib.shake_256(ticket.encode()).hexdigest(5)
                 serializer.save(ticket_number=ticket_number)
         return Response({"message":"successfully created"})
@@ -151,8 +152,8 @@ def ticketgenerator(request, count, pk):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def availabletickets(request, pk):
-    concert = Concert.objects.get(id=pk)
-    ticketList = Ticket.objects.filter(isValid=True, isIssued=False, concert=concert )
+    event = Event.objects.get(id=pk)
+    ticketList = Ticket.objects.filter(isValid=True, isIssued=False, event=event )
     serializer = TicketSerializer(ticketList, many=True)
     return Response(serializer.data)
 
@@ -160,8 +161,8 @@ def availabletickets(request, pk):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def issuedtickets(request, pk):
-    concert = Concert.objects.get(id=pk)
-    ticketList = Ticket.objects.filter(isValid=True, isIssued=True, concert=concert)
+    event = Event.objects.get(id=pk)
+    ticketList = Ticket.objects.filter(isValid=True, isIssued=True, event=event)
     serializer = TicketSerializer(ticketList, many=True)
     return Response(serializer.data)
 
@@ -179,17 +180,17 @@ def issueticket(request):
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
-def addtoconcert(request,pk):
-    concert = Concert.objects.get(id=pk)
+def addtoevent(request, eid):
+    event = Event.objects.get(id=eid)
     user = UserProfile.objects.get(user=request.user)
-    ticketList = Ticket.objects.filter(concert=concert)
+    ticketList = Ticket.objects.filter(event=event)
     for t in ticketList:
         if str(request.data['ticket_number']) == str(t.ticket_number):
-            enroll = Enrollment(concert=concert,user=user, ticket_number=request.data['ticket_number'])
+            enroll = Enrollment(event=event,user=user, ticket_number=request.data['ticket_number'])
             condition = t.isValid==True and t.isIssued == True
             if request.method == "POST":
                 if condition:
-                    e = Enrollment.objects.filter(concert=concert, user=user).first()
+                    e = Enrollment.objects.filter(event=event, user=user).first()
                     if not e:
                         serializer = EnrollSerializer(enroll, data=request.data)
                         if serializer.is_valid():
@@ -207,15 +208,15 @@ def addtoconcert(request,pk):
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
-def addtoconcertbyband(request,pk):
-    concert = Concert.objects.get(id=pk)
+def addtoeventbyband(request, eid):
+    event = Event.objects.get(id=eid)
     res = []
     for username in request.data['users']:
         user = UserProfile.objects.filter(user__username=username).first()
         if user:
-            e = Enrollment.objects.filter(concert=concert, user=user).first()
+            e = Enrollment.objects.filter(event=event, user=user).first()
             if not e:
-                enroll = Enrollment(concert=concert, user=user, ticket_number="added by Band")
+                enroll = Enrollment(event=event, user=user, ticket_number="added by Band")
                 serializer = EnrollSerializer(enroll, data= request.data)
                 if serializer.is_valid():
                     serializer.save()
@@ -252,12 +253,12 @@ def addtoconcertbyband(request,pk):
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
-def freeentry(request,cid):
-    concert = Concert.objects.get(id=cid)
+def freeentry(request,eid):
+    event = Event.objects.get(id=eid)
     user = UserProfile.objects.get(user=request.user)
-    enrollment = Enrollment.objects.filter(user=user, concert=concert).first()
+    enrollment = Enrollment.objects.filter(user=user, event=event).first()
     if not enrollment:
-        enroll = Enrollment(concert=concert, user=user, ticket_number="Free")
+        enroll = Enrollment(event=event, user=user, ticket_number="Free")
         enroll_serializer = EnrollSerializer(enroll, data=request.data)
         if enroll_serializer.is_valid():
             enroll_serializer.save()
@@ -269,10 +270,10 @@ def freeentry(request,cid):
 
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated])
-def removefromconcert(request, uid, cid):
+def removefromevent(request, uid, eid):
     user = UserProfile.objects.get(id=uid)
-    concert = Concert.objects.get(id=cid)
-    enrollment = Enrollment.objects.filter(concert=concert, user=user).first()
+    event = EventMode.objects.get(id=eid)
+    enrollment = Enrollment.objects.filter(event=event, user=user).first()
     if enrollment:
         enrollment.delete()
         return Response({'message' : 'Removed successfully'}, status=200)
