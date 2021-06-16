@@ -30,6 +30,9 @@ urlpatterns = [
     # adding to the concert
 
     path('addtoconcert/<int:pk>/',views.addtoconcert),
+    path('addtoconcertbyband/<int:pk>/',views.addtoconcertbyband),
+    path('freeconcert/<int:cid>/',views.freeentry),
+    path('remove/<int:cid>/<int:uid>/',views.removefromconcert),
 
 
 

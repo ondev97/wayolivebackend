@@ -197,7 +197,82 @@ def addtoconcert(request,pk):
                                 ticketserializer.save(isValid=False)
                             return Response(serializer.data)
                         return Response(serializer.errors,status=403)
-                    return Response({"message":"You have already enrolled this course..."},status=403)
-                return Response({"message":"Coupon is not valid"},status=403)
+                    return Response({"message":"You have already in this Concert..."},status=403)
+                return Response({"message":"Ticket is not valid"},status=403)
 
-    return Response({"message":"coupon is not found"},status=404)
+    return Response({"message":"ticket is not found"},status=404)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def addtoconcertbyband(request,pk):
+    concert = Concert.objects.get(id=pk)
+    res = []
+    for username in request.data['users']:
+        user = UserProfile.objects.filter(user__username=username).first()
+        if user:
+            e = Enrollment.objects.filter(concert=concert, user=user).first()
+            if not e:
+                enroll = Enrollment(concert=concert, user=user, ticket_number="added by Band")
+                serializer = EnrollSerializer(enroll, data= request.data)
+                if serializer.is_valid():
+                    serializer.save()
+                    res.append({
+                        "username" : user.user.username,
+                        "email" : user.user.email,
+                        "status" : "added to the concert successfully",
+                        "success": True
+                    })
+                else:
+                    res.append({
+                        "username": user.user.username,
+                        "email": user.user.email,
+                        "status": "something is wrong",
+                        "success": False
+                    })
+            else:
+                res.append({
+                    "username": user.user.username,
+                    "email": user.user.email,
+                    "status": "already in this concert",
+                    "success": False
+                })
+        else:
+            res.append({
+                "username": username,
+                "email": "",
+                "status": "user not found",
+                "success": False
+            })
+
+    return Response(res, status=200)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def freeentry(request,cid):
+    concert = Concert.objects.get(id=cid)
+    user = UserProfile.objects.get(user=request.user)
+    enrollment = Enrollment.objects.filter(user=user, concert=concert).first()
+    if not enrollment:
+        enroll = Enrollment(concert=concert, user=user, ticket_number="Free")
+        enroll_serializer = EnrollSerializer(enroll, data=request.data)
+        if enroll_serializer.is_valid():
+            enroll_serializer.save()
+            return Response(enroll_serializer.data)
+        return Response(enroll_serializer.errors)
+    else:
+        return Response({'message': 'You have already enrolled'}, status=403)
+
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def removefromconcert(request, uid, cid):
+    user = UserProfile.objects.get(id=uid)
+    concert = Concert.objects.get(id=cid)
+    enrollment = Enrollment.objects.filter(concert=concert, user=user).first()
+    if enrollment:
+        enrollment.delete()
+        return Response({'message' : 'Removed successfully'}, status=200)
+    else:
+        return Response({'message': 'No entry found'}, status=404)
