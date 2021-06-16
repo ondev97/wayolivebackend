@@ -1,5 +1,5 @@
 from dj_rest_auth.serializers import TokenSerializer
-from django.contrib.auth import get_user_model
+
 
 from authentication.models import User,BandProfile,UserProfile
 from rest_framework import serializers
