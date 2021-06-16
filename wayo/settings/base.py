@@ -80,9 +80,7 @@ REST_FRAMEWORK={
     )
 }
 
-REST_AUTH_REGISTER_SERIALIZERS = {
-    'REGISTER_SERIALIZER': 'authentication.serializer.UserSerializerAPI'
-}
+
 
 REST_AUTH_SERIALIZERS = {
     'TOKEN_SERIALIZER': 'authentication.serializer.CustomTokenSerializer',

@@ -1,4 +1,4 @@
-from dj_rest_auth.app_settings import TokenSerializer
+from dj_rest_auth.serializers import TokenSerializer
 from django.contrib.auth import get_user_model
 
 from authentication.models import User,BandProfile,UserProfile
@@ -25,7 +25,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
 class UserTokenSerializer(serializers.ModelSerializer):
     class Meta:
-        model = get_user_model()
+        model = User
         fields = ('id', 'email','is_band')
 
 
