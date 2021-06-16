@@ -42,14 +42,3 @@ class EnrollSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-class UserTokenSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = get_user_model()
-        fields = ('id', 'email','is_band')
-
-
-class CustomTokenSerializer(TokenSerializer):
-    user = UserTokenSerializer(read_only=True)
-
-    class Meta(TokenSerializer.Meta):
-        fields = ('key', 'user')
