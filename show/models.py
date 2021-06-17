@@ -28,7 +28,7 @@ class Event(models.Model):
     def upload_location(instance, filename):
         return "event_images/%s/%s" % (instance.event_name, filename)
 
-    event_mode = models.ForeignKey(EventMode, on_delete=models.PROTECT, null=True, default=None)
+    event_mode = models.ForeignKey(EventMode, on_delete=models.SET_NULL, null=True, default=None)
     event_name = models.CharField(max_length=300,null=True,blank=True)
     band = models.ForeignKey(BandProfile,on_delete=models.CASCADE,null=True,blank=True)
     description = models.TextField(null=True,blank=True)
@@ -39,7 +39,7 @@ class Event(models.Model):
     event_label = models.CharField(max_length=15,null=True,blank=True)
     event_content = models.TextField(null=True,blank=True)
     is_freeze = models.BooleanField(default=False)
-    event_cover = models.ImageField(null=True, blank=True, upload_to=upload_location, default='user_images/default.jpg')
+    event_cover = models.ImageField(null=True, blank=True, upload_to=upload_location, default='event_images/default.jpg')
 
     def __str__(self):
         return self.event_name

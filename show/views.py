@@ -12,8 +12,9 @@ from .models import *
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def createevent(request,pk):
-    concert = EventMode.objects.get(id=pk)
-    event = Event(concert=concert)
+    e_mode = EventMode.objects.get(id=pk)
+    band = BandProfile.objects.get(user=request.user)
+    event = Event(event_mode=e_mode, band=band)
     serializer = EventSerializer(event, data=request.data)
     if serializer.is_valid():
         serializer.save()
@@ -25,7 +26,7 @@ def createevent(request,pk):
 @permission_classes([IsAuthenticated])
 def listevent(request,pk):
     concert = EventMode.objects.get(id=pk)
-    events = Event.objects.filter(concert__id=concert.id)
+    events = Event.objects.filter(event_mode__id=concert.id)
     serializer = EventSerializer(events, many=True)
     return Response(serializer.data)
 
@@ -39,8 +40,11 @@ def viewevent(request,pk):
 
 @api_view(['PUT'])
 @permission_classes([IsAuthenticated])
-def updateevent(request,pk):
+def updateevent(request,pk, id):
     event = Event.objects.get(id=pk)
+    if id!=0:
+        event_mode = EventMode.objects.get(id=id)
+        event.event_mode = event_mode
     serializer = EventSerializer(instance=event,data=request.data)
     if serializer.is_valid():
         serializer.save()
@@ -175,7 +179,7 @@ def addtoevent(request, eid):
                                 ticketserializer.save(isValid=False)
                             return Response(serializer.data)
                         return Response(serializer.errors,status=403)
-                    return Response({"message":"You have already in this Concert..."},status=403)
+                    return Response({"message":"You have already in this event..."},status=403)
                 return Response({"message":"Ticket is not valid"},status=403)
 
     return Response({"message":"ticket is not found"},status=404)
@@ -198,7 +202,7 @@ def addtoeventbyband(request, eid):
                     res.append({
                         "username" : user.user.username,
                         "email" : user.user.email,
-                        "status" : "added to the concert successfully",
+                        "status" : "added to the event successfully",
                         "success": True
                     })
                 else:
@@ -212,13 +216,12 @@ def addtoeventbyband(request, eid):
                 res.append({
                     "username": user.user.username,
                     "email": user.user.email,
-                    "status": "already in this concert",
+                    "status": "already in this event",
                     "success": False
                 })
         else:
             res.append({
                 "username": username,
-                "email": "",
                 "status": "user not found",
                 "success": False
             })
@@ -269,7 +272,7 @@ def eventsinband(request):
 @permission_classes([IsAuthenticated])
 def audienceinthevent(request,pk):
     event = Event.objects.get(id=pk)
-    events_enrolled = Event.objects.filter(event=event).order_by('-id')
+    events_enrolled = Enrollment.objects.filter(event=event).order_by('-id')
     user_ids = []
     for c in events_enrolled:
         if c.user.id not in user_ids:
@@ -283,6 +286,8 @@ def audienceinthevent(request,pk):
 def myevents(request):
     user = UserProfile.objects.get(user_id=request.user.id)
     events_enrolled = Enrollment.objects.filter(user=user).order_by('-id')
-    queryset = EnrollSerializer(request.GET, queryset=events_enrolled)
-    serializer = EventViewSerializer(queryset,many=True)
+    serializer = MyEventsSerializer(events_enrolled,many=True)
     return Response(serializer.data)
+
+
+

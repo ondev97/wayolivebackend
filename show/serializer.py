@@ -40,3 +40,10 @@ class EnrollSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
+class MyEventsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Enrollment
+        fields = ['event', 'ticket_number']
+        depth = 2
+
+

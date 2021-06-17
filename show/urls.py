@@ -17,7 +17,7 @@ urlpatterns = [
     path('createevent/<int:pk>/',views.createevent),
     path('listevents/<int:pk>/',views.listevent),
     path('viewevent/<int:pk>/',views.viewevent),
-    path('updateevent/<int:pk>/',views.updateevent),
+    path('updateevent/<int:pk>/<int:id>/',views.updateevent),
     path('deleteevent/<int:pk>/',views.deletevent),
 
     # ticket urls
@@ -31,7 +31,7 @@ urlpatterns = [
 
     path('addtoevent/<int:eid>/', views.addtoevent),
     path('addtoeventbyband/<int:eid>/', views.addtoeventbyband),
-    path('freeconcert/<int:eid>/',views.freeentry),
+    path('freeevent/<int:eid>/',views.freeentry),
     path('remove/<int:eid>/<int:uid>/', views.removefromevent),
 
     # events in band
@@ -40,7 +40,7 @@ urlpatterns = [
 
     # audience in the event
 
-    path('audienceintheevent/',views.audienceinthevent),
+    path('audienceintheevent/<int:pk>/',views.audienceinthevent),
 
     # my events
 
