@@ -34,6 +34,18 @@ urlpatterns = [
     path('freeconcert/<int:eid>/',views.freeentry),
     path('remove/<int:eid>/<int:uid>/', views.removefromevent),
 
+    # events in band
+
+    path('eventsinband/',views.eventsinband),
+
+    # audience in the event
+
+    path('audienceintheevent/',views.audienceinthevent),
+
+    # my events
+
+    path('myevents/',views.myevents),
+
 
 
 

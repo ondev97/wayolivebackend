@@ -5,4 +5,6 @@ urlpatterns = [
     path('register/',views.createuser.as_view()),
     path('updateuser/<int:pk>/',views.updateuser.as_view()),
     path('updateuserprofile/<int:pk>/',views.updatestudentprofileView),
+    path('updatebandprofile/<int:pk>/',views.updatebandprofileview),
+    path('listbands/',views.listbandprofiles),
 ]

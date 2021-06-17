@@ -28,8 +28,9 @@ class Event(models.Model):
     def upload_location(instance, filename):
         return "event_images/%s/%s" % (instance.event_name, filename)
 
-    event_mode = models.ForeignKey(EventMode, on_delete=models.CASCADE, null=True, default=None)
+    event_mode = models.ForeignKey(EventMode, on_delete=models.PROTECT, null=True, default=None)
     event_name = models.CharField(max_length=300,null=True,blank=True)
+    band = models.ForeignKey(BandProfile,on_delete=models.CASCADE,null=True,blank=True)
     description = models.TextField(null=True,blank=True)
     event_type = models.CharField(max_length=100,null=True,blank=True)
     event_date = models.DateField(default=date.today)

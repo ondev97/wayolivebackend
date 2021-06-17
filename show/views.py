@@ -1,38 +1,13 @@
 import hashlib
-
-from django.shortcuts import render
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from aifc import Error
-
+from authentication.serializer import UserProfileSerializer
 from .serializer import *
 
 from .models import *
 
-
-# Band Views
-
-# def createBand(request):
-#     pass
-#
-# def listBand(request):
-#     pass
-#
-# def viewBand(request,pk):
-#     pass
-#
-#
-# def updateBand(request,pk):
-#     pass
-#
-# def deleteBand(request,pk):
-#     pass
-#
-
-# I also edited this file by my self ( FutureARROW )
-
-# show Views
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -279,3 +254,35 @@ def removefromevent(request, uid, eid):
         return Response({'message' : 'Removed successfully'}, status=200)
     else:
         return Response({'message': 'No entry found'}, status=404)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def eventsinband(request):
+    band = BandProfile.objects.get(user=request.user)
+    events = Event.objects.filter(band=band)
+    serializer = EventViewSerializer(events,many=True)
+    return Response(serializer.data)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def audienceinthevent(request,pk):
+    event = Event.objects.get(id=pk)
+    events_enrolled = Event.objects.filter(event=event).order_by('-id')
+    user_ids = []
+    for c in events_enrolled:
+        if c.user.id not in user_ids:
+            user_ids.append(c.user.id)
+    users = UserProfile.objects.filter(id__in=user_ids)
+    serializer = UserProfileSerializer(users, many=True)
+    return Response(serializer.data)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def myevents(request):
+    user = UserProfile.objects.get(user_id=request.user.id)
+    events_enrolled = Enrollment.objects.filter(user=user).order_by('-id')
+    queryset = EnrollSerializer(request.GET, queryset=events_enrolled)
+    serializer = EventViewSerializer(queryset,many=True)
+    return Response(serializer.data)

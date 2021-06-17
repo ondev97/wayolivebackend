@@ -49,4 +49,22 @@ def updatestudentprofileView(request,pk):
     return Response(serializer.data)
 
 
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def updatebandprofileview(request,pk):
+    user = BandProfile.objects.get(user_id=pk)
+    serializer = BandProfileSerializer(instance=user,data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        serializer.data['user'].pop('password')
+    return Response(serializer.data)
+
+
+@api_view(['GET'])
+def listbandprofiles(request):
+    bands = BandProfile.objects.all()
+    serializer = BandProfileSerializer(bands,many=True)
+    return Response(serializer.data)
+
+
 
