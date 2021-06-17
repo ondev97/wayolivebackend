@@ -16,6 +16,7 @@ urlpatterns = [
 
     path('createevent/<int:pk>/',views.createevent),
     path('listevents/<int:pk>/',views.listevent),
+    path('listeventsinband/<int:pk>/',views.listeventinband),
     path('viewevent/<int:pk>/',views.viewevent),
     path('updateevent/<int:pk>/<int:id>/',views.updateevent),
     path('deleteevent/<int:pk>/',views.deletevent),
