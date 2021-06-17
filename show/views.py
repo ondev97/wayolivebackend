@@ -25,8 +25,8 @@ def createevent(request,pk):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def listevent(request,pk):
-    concert = EventMode.objects.get(id=pk)
-    events = Event.objects.filter(event_mode__id=concert.id)
+    event_mode = EventMode.objects.get(id=pk)
+    events = Event.objects.filter(event_mode__id=event_mode.id)
     serializer = EventSerializer(events, many=True)
     return Response(serializer.data)
 
