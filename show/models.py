@@ -39,7 +39,7 @@ class Event(models.Model):
     event_label = models.CharField(max_length=15,null=True,blank=True)
     event_content = models.TextField(null=True,blank=True)
     is_freeze = models.BooleanField(default=False)
-    event_cover = models.ImageField(null=True, blank=True, upload_to=upload_location)
+    event_cover = models.ImageField(null=True, blank=True, upload_to=upload_location, default='user_images/default.jpg')
 
     def __str__(self):
         return self.event_name

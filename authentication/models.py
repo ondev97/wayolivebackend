@@ -14,6 +14,8 @@ from django.dispatch import receiver
 
 class User(AbstractUser):
     username = models.CharField(max_length=30,unique=True)
+    first_name = models.CharField(max_length=50, null=True, blank=True)
+    last_name = models.CharField(max_length=50, null=True, blank=True)
     email = models.EmailField(max_length=80,unique=True)
     phone_no = models.CharField(max_length=15,null=True,blank=True)
     is_band = models.BooleanField(default=False)
@@ -24,8 +26,8 @@ class BandProfile(models.Model):
         return "band_images/%s/%s" % (instance.user.username, filename)
 
     user = models.OneToOneField(User,on_delete=models.CASCADE)
-    band_description = models.TextField()
-    band_image = models.ImageField(null=True,blank=True, upload_to=upload_location)
+    band_description = models.TextField(null=True,blank=True)
+    band_image = models.ImageField(null=True,blank=True, upload_to=upload_location, default='user_images/default.jpg')
 
     def __str__(self):
         return self.user.username
@@ -49,8 +51,8 @@ class UserProfile(models.Model):
 
 
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    user_description = models.TextField()
-    user_image = models.ImageField(null=True,blank=True, upload_to=upload_location)
+    user_description = models.TextField(null=True,blank=True)
+    user_image = models.ImageField(null=True,blank=True, upload_to=upload_location, default='user_images/default.jpg')
 
     def __str__(self):
         return self.user.username

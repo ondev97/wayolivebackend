@@ -1,15 +1,17 @@
 from django.shortcuts import render
 
 # Create your views here.
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, parser_classes
 from rest_framework.exceptions import APIException
 from rest_framework.generics import CreateAPIView, RetrieveUpdateAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.parsers import MultiPartParser, FormParser
 
 from .serializer import *
 
 from .models import *
+
 
 class createuser(CreateAPIView):
     serializer_class = UserSerializerAPI
@@ -40,13 +42,17 @@ class updateuser(RetrieveUpdateAPIView):
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
-def updatestudentprofileView(request,pk):
+# @parser_classes([MultiPartParser,FormParser])
+def updateuserprofile(request, pk):
     user = UserProfile.objects.get(user_id=pk)
     serializer = UserProfileSerializer(instance=user,data=request.data)
     if serializer.is_valid():
         serializer.save()
         serializer.data['user'].pop('password')
-    return Response(serializer.data)
+        return Response(serializer.data)
+    else:
+        return Response(serializer.errors)
+    
 
 
 @api_view(['POST'])
