@@ -50,8 +50,11 @@ INSTALLED_APPS = [
     'allauth.account',
     'allauth.socialaccount',
     'dj_rest_auth.registration',
+    'corsheaders',
 
 ]
+
+CORS_ALLOW_ALL_ORIGINS = True
 
 SITE_ID = 1
 

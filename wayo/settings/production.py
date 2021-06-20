@@ -12,6 +12,8 @@ DATABASES = {
     }
 }
 
+
+
 INSTALLED_APPS += [
     'storages',
 ]
