@@ -72,5 +72,19 @@ def listbandprofiles(request):
     serializer = BandProfileSerializer(bands,many=True)
     return Response(serializer.data)
 
+@api_view(['GET'])
+def listuserprofiles(request):
+    users = UserProfile.objects.all()
+    serializer = UserProfileSerializer(users,many=True)
+    return Response(serializer.data)
+
+@api_view(['GET'])
+def viewprofile(request):
+    if request.user.is_band:
+        user = BandProfile.objects.get(user=request.user)
+    else:
+        user = UserProfile.objects.get(user=request.user)
+    serializer = UserProfileSerializer(user)
+    return Response(serializer.data)
 
 

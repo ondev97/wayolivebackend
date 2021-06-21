@@ -297,5 +297,10 @@ def myevents(request):
     serializer = MyEventsSerializer(events_enrolled,many=True)
     return Response(serializer.data)
 
-
-
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def myeventmods(request):
+    band = BandProfile.objects.get(user=request.user)
+    event_mods = EventMode.objects.all()
+    serializer = ConcertSerializer(event_mods,many=True)
+    return Response(serializer.data)

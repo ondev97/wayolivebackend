@@ -7,4 +7,6 @@ urlpatterns = [
     path('updateuserprofile/<int:pk>/',views.updateuserprofile),
     path('updatebandprofile/<int:pk>/',views.updatebandprofileview),
     path('listbands/',views.listbandprofiles),
+    path('listusers/',views.listuserprofiles),
+    path('viewprofile/',views.viewprofile),
 ]
