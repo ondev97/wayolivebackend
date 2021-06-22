@@ -82,12 +82,13 @@ def listuserprofiles(request):
 
 @api_view(['GET'])
 def viewprofile(request):
-    user = User.objects.get(id=request.user.id)
-    if user.is_band:
+    print(request.user.username, request.user.is_band)
+    if request.user.is_band:
         user = BandProfile.objects.get(user=request.user)
+        serializer = BandProfileSerializer(user)
     else:
         user = UserProfile.objects.get(user=request.user)
-    serializer = UserProfileSerializer(user)
+        serializer = UserProfileSerializer(user)
     return Response(serializer.data)
 
 # Logout View
