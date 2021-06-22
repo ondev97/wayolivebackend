@@ -16,6 +16,7 @@ class BandProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = BandProfile
         fields = '__all__'
+        depth = 1
 
 
 class ViewBandProfileSerializer(serializers.ModelSerializer):
