@@ -43,7 +43,7 @@ class updateuser(RetrieveUpdateAPIView):
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
-# @parser_classes([MultiPartParser,FormParser])
+@parser_classes([MultiPartParser,FormParser])
 def updateuserprofile(request, pk):
     user = UserProfile.objects.get(user_id=pk)
     serializer = UserProfileSerializer(instance=user,data=request.data)
@@ -58,6 +58,7 @@ def updateuserprofile(request, pk):
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
+@parser_classes([MultiPartParser,FormParser])
 def updatebandprofileview(request,pk):
     user = BandProfile.objects.get(user_id=pk)
     serializer = BandProfileSerializer(instance=user,data=request.data)
