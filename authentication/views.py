@@ -82,7 +82,8 @@ def listuserprofiles(request):
 
 @api_view(['GET'])
 def viewprofile(request):
-    if request.user.is_band:
+    user = User.objects.get(id=request.user.id)
+    if user.is_band:
         user = BandProfile.objects.get(user=request.user)
     else:
         user = UserProfile.objects.get(user=request.user)
