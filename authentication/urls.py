@@ -9,4 +9,5 @@ urlpatterns = [
     path('listbands/',views.listbandprofiles),
     path('listusers/',views.listuserprofiles),
     path('viewprofile/',views.viewprofile),
+    path('logout/',views.LogoutView.as_view()),
 ]

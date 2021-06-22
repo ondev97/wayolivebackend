@@ -7,6 +7,7 @@ from rest_framework.generics import CreateAPIView, RetrieveUpdateAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.views import APIView
 
 from .serializer import *
 
@@ -69,7 +70,7 @@ def updatebandprofileview(request,pk):
 @api_view(['GET'])
 def listbandprofiles(request):
     bands = BandProfile.objects.all()
-    serializer = BandProfileSerializer(bands,many=True)
+    serializer = ViewBandProfileSerializer(bands,many=True)
     return Response(serializer.data)
 
 @api_view(['GET'])
@@ -87,4 +88,13 @@ def viewprofile(request):
     serializer = UserProfileSerializer(user)
     return Response(serializer.data)
 
+# Logout View
+class LogoutView(APIView):
+    @staticmethod
+    def delete(request, *args, **kwargs):
+        request.user.auth_token.delete()
+        data = {
+            "message": "You have successfully logged out.",
+        }
+        return Response(data)
 
