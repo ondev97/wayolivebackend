@@ -109,7 +109,7 @@ def getusersnotinevent(request, id):
     enr = Enrollment.objects.filter(event_id=id)
     enrollments = []
     for e in enr:
-        enrollments.append(e.student.id)
+        enrollments.append(e.user.id)
     users = UserProfile.objects.exclude(id__in=enrollments)
     serializer = UserProfileSerializer(data=users,many=True)
     return Response(serializer.data)
