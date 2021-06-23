@@ -2,12 +2,12 @@ from rest_framework import serializers
 from .models import *
 
 
-class ConcertSerializer(serializers.ModelSerializer):
+class EventModeSerializer(serializers.ModelSerializer):
     class Meta:
         model = EventMode
         fields = '__all__'
 
-class ConcertListSerializer(serializers.ModelSerializer):
+class EventModeListSerializer(serializers.ModelSerializer):
     class Meta:
         model = EventMode
         fields = '__all__'

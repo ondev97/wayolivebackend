@@ -72,7 +72,7 @@ def deletevent(request,pk):
 def createeventmode(request):
     band = BandProfile.objects.get(user=request.user)
     concert = EventMode(band=band)
-    serializer = ConcertSerializer(concert, data=request.data)
+    serializer = EventModeSerializer(concert, data=request.data)
     if serializer.is_valid():
         serializer.save()
         return Response(serializer.data)
@@ -84,7 +84,7 @@ def createeventmode(request):
 def listeventmode(request):
     band = BandProfile.objects.get(user=request.user)
     eventmodes = EventMode.objects.filter(band=band)
-    serializer = ConcertListSerializer(eventmodes, many=True)
+    serializer = EventModeListSerializer(eventmodes, many=True)
     return Response(serializer.data)
 
 
@@ -92,14 +92,14 @@ def listeventmode(request):
 @permission_classes([IsAuthenticated])
 def vieweventmode(request, pk):
     concert = EventMode.objects.get(id=pk)
-    serializer = ConcertListSerializer(concert)
+    serializer = EventModeListSerializer(concert)
     return Response(serializer.data)
 
 @api_view(['PUT'])
 @permission_classes([IsAuthenticated])
 def updateeventmode(request, pk):
     concert = EventMode.objects.get(id=pk)
-    serializer = ConcertSerializer(instance=concert,data=request.data)
+    serializer = EventModeSerializer(instance=concert, data=request.data)
     if serializer.is_valid():
         serializer.save()
     return Response(serializer.data)
@@ -299,8 +299,8 @@ def myevents(request):
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
-def myeventmods(request):
-    band = BandProfile.objects.get(user=request.user)
-    event_mods = EventMode.objects.all()
-    serializer = ConcertSerializer(event_mods,many=True)
+def eventmodesforuser(request,pk):
+    band = BandProfile.objects.get(user=pk)
+    event_modes = EventMode.objects.filter(band=band)
+    serializer = EventModeSerializer(event_modes, many=True)
     return Response(serializer.data)
