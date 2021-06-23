@@ -111,5 +111,5 @@ def getusersnotinevent(request, id):
     for e in enr:
         enrollments.append(e.user.id)
     users = UserProfile.objects.exclude(id__in=enrollments)
-    serializer = UserProfileSerializer(data=users,many=True)
+    serializer = UserProfileSerializer(users,many=True)
     return Response(serializer.data)
