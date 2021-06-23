@@ -10,7 +10,7 @@ urlpatterns = [
     path('vieweventmode/<int:pk>/', views.vieweventmode),
     path('updateeventmode/<int:pk>/', views.updateeventmode),
     path('deleteeventmode/<int:pk>/', views.deleteeventmode),
-    path('myeventmodes/<int:pk>/', views.myeventmods),
+    path('myeventmodes/<int:pk>/', views.eventmodesforuser),
 
 
     # event urls
