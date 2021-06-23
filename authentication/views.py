@@ -9,6 +9,7 @@ from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.views import APIView
 
+from show.models import Enrollment
 from .serializer import *
 
 from .models import *
@@ -101,3 +102,14 @@ class LogoutView(APIView):
         }
         return Response(data)
 
+
+@api_view(['GET'])
+# @permission_classes([IsAuthenticated])
+def getusersnotinevent(request, id):
+    enr = Enrollment.objects.filter(event_id=id)
+    enrollments = []
+    for e in enr:
+        enrollments.append(e.student.id)
+    users = UserProfile.objects.exclude(id__in=enrollments)
+    serializer = UserProfileSerializer(data=users,many=True)
+    return Response(serializer.data)
