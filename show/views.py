@@ -5,6 +5,7 @@ from rest_framework.response import Response
 from aifc import Error
 from authentication.serializer import UserProfileSerializer
 from .serializer import *
+from .filter import *
 
 from .models import *
 
@@ -35,7 +36,8 @@ def listevent(request,pk):
 def listeventinband(request,pk):
     band = BandProfile.objects.get(id=pk)
     events = Event.objects.filter(band=band)
-    serializer = EventViewSerializer(events, many=True)
+    filtered_events = EventFilter(request.GET, queryset=events)
+    serializer = EventViewSerializer(filtered_events.qs, many=True)
     i = 0
     for d in serializer.data:
         e = Enrollment.objects.filter(event__id=d['id'], user__user=request.user)
