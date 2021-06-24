@@ -271,7 +271,7 @@ def freeentry(request,eid):
 @permission_classes([IsAuthenticated])
 def removefromevent(request, uid, eid):
     user = UserProfile.objects.get(id=uid)
-    event = EventMode.objects.get(id=eid)
+    event = Event.objects.get(id=eid)
     enrollment = Enrollment.objects.filter(event=event, user=user).first()
     if enrollment:
         enrollment.delete()
