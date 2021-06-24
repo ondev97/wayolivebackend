@@ -51,10 +51,11 @@ def listeventinband(request,pk):
 def viewevent(request,pk):
     event = Event.objects.get(id=pk)
     serializer = EventViewSerializer(event)
+    data = serializer.data
     e = Enrollment.objects.filter(event__id=serializer.data['id'],user__user=request.user)
     if e:
-        serializer.data['is_enrolled'] = True
-    return Response(serializer.data)
+        data['is_enrolled'] = True
+    return Response(data)
 
 @api_view(['PUT'])
 @permission_classes([IsAuthenticated])
