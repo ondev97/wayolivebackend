@@ -300,7 +300,7 @@ def myevents(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def eventmodesforuser(request,pk):
-    band = BandProfile.objects.get(user=pk)
+    band = BandProfile.objects.get(id=pk)
     event_modes = EventMode.objects.filter(band=band)
     serializer = EventModeSerializer(event_modes, many=True)
     return Response(serializer.data)
