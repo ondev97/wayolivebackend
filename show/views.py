@@ -35,7 +35,14 @@ def listevent(request,pk):
 def listeventinband(request,pk):
     band = BandProfile.objects.get(id=pk)
     events = Event.objects.filter(band=band)
-    serializer = EventViewSerializer(events,many=True)
+    serializer = EventViewSerializer(events, many=True)
+    i = 0
+    for d in serializer.data:
+        e = Enrollment.objects.filter(event__id=d['id'], user__user=request.user)
+        if e:
+            serializer.data[i]['is_enrolled'] = True
+        i = i+1
+
     return Response(serializer.data)
 
 
