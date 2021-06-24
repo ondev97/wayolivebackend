@@ -25,7 +25,7 @@ class EventViewSerializer(serializers.ModelSerializer):
         model = Event
         fields = '__all__'
 
-        depth = 1
+        depth = 2
 
 
 class TicketSerializer(serializers.ModelSerializer):
