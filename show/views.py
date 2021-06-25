@@ -40,6 +40,7 @@ def listeventinband(request,pk):
     serializer = EventViewSerializer(filtered_events.qs, many=True)
     i = 0
     for d in serializer.data:
+        serializer.data[i]['band']['user'].pop('password')
         e = Enrollment.objects.filter(event__id=d['id'], user__user=request.user)
         if e:
             serializer.data[i]['is_enrolled'] = True
@@ -57,6 +58,7 @@ def viewevent(request,pk):
     e = Enrollment.objects.filter(event__id=serializer.data['id'],user__user=request.user)
     if e:
         data['is_enrolled'] = True
+    data['band']['user'].pop('password')
     return Response(data)
 
 @api_view(['PUT'])
@@ -98,6 +100,8 @@ def listeventmode(request):
     band = BandProfile.objects.get(user=request.user)
     eventmodes = EventMode.objects.filter(band=band)
     serializer = EventModeListSerializer(eventmodes, many=True)
+    for i in range(len(serializer.data)):
+        serializer.data[i]['band']['user'].pop('password')
     return Response(serializer.data)
 
 
@@ -106,6 +110,7 @@ def listeventmode(request):
 def vieweventmode(request, pk):
     concert = EventMode.objects.get(id=pk)
     serializer = EventModeListSerializer(concert)
+    serializer.data['band']['user'].pop('password')
     return Response(serializer.data)
 
 @api_view(['PUT'])

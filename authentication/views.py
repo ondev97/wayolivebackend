@@ -73,12 +73,16 @@ def updatebandprofileview(request,pk):
 def listbandprofiles(request):
     bands = BandProfile.objects.all()
     serializer = ViewBandProfileSerializer(bands,many=True)
+    for i in range(len(serializer.data)):
+        serializer.data[i]['user'].pop('password')
     return Response(serializer.data)
 
 @api_view(['GET'])
 def listuserprofiles(request):
     users = UserProfile.objects.all()
     serializer = UserProfileSerializer(users,many=True)
+    for i in range(len(serializer.data)):
+        serializer.data[i]['user'].pop('password')
     return Response(serializer.data)
 
 @api_view(['GET'])
@@ -90,6 +94,7 @@ def viewprofile(request):
     else:
         user = UserProfile.objects.get(user=request.user)
         serializer = UserProfileSerializer(user)
+    serializer.data['user'].pop('password')
     return Response(serializer.data)
 
 # Logout View
@@ -112,6 +117,8 @@ def getusersnotinevent(request, id):
         enrollments.append(e.user.id)
     users = UserProfile.objects.exclude(id__in=enrollments)
     serializer = UserProfileSerializer(users,many=True)
+    for i in range(len(serializer.data)):
+        serializer.data[i]['user'].pop('password')
     return Response(serializer.data)
 
 
