@@ -291,6 +291,8 @@ def eventsinband(request):
     band = BandProfile.objects.get(user=request.user)
     events = Event.objects.filter(band=band)
     serializer = EventViewSerializer(events,many=True)
+    for i in range(len(serializer.data)):
+        serializer.data[i]['band']['user'].pop('password')
     return Response(serializer.data)
 
 
@@ -305,7 +307,10 @@ def audienceinthevent(request,pk):
             user_ids.append(c.user.id)
     users = UserProfile.objects.filter(id__in=user_ids)
     serializer = UserProfileSerializer(users, many=True)
+    for i in range(len(serializer.data)):
+        serializer.data[i]['user'].pop('password')
     return Response(serializer.data)
+
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
