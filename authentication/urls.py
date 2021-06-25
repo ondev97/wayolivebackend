@@ -10,5 +10,6 @@ urlpatterns = [
     path('listusers/',views.listuserprofiles),
     path('viewprofile/',views.viewprofile),
     path('logout/',views.LogoutView.as_view()),
+    path('checkuser/',views.TestLoginView),
     path('notinevent/<int:id>/',views.getusersnotinevent),
 ]

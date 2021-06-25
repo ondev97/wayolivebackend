@@ -113,3 +113,19 @@ def getusersnotinevent(request, id):
     users = UserProfile.objects.exclude(id__in=enrollments)
     serializer = UserProfileSerializer(users,many=True)
     return Response(serializer.data)
+
+
+@api_view(['POST'])
+def TestLoginView(request):
+    user = User.objects.filter(username=request.data['username']).first()
+    status = False
+    if not user:
+        return Response({
+            "status": status
+        })
+    token = Token.objects.filter(user=user).first()
+    if token:
+        status = True
+    return Response({
+        "status" : status
+    })
