@@ -136,3 +136,16 @@ def TestLoginView(request):
     return Response({
         "status" : status
     })
+
+@api_view(['POST'])
+def resetloginview(request,username):
+    user_token = Token.objects.get(username=username)
+    if user_token:
+        user_token.delete()
+        return Response({
+            "msg":"Login Session Reset Successfully"
+        })
+    else:
+        return Response({
+            "msg":"Login Session with this Username not Found"
+        })
