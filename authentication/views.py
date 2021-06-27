@@ -137,7 +137,7 @@ def TestLoginView(request):
         "status" : status
     })
 
-@api_view(['POST'])
+@api_view(['DELETE'])
 def resetloginview(request,username):
     user_token = Token.objects.get(username=username)
     if user_token:
