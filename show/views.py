@@ -320,6 +320,7 @@ def myevents(request):
     serializer = MyEventsSerializer(events_enrolled,many=True)
     return Response(serializer.data)
 
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def eventmodesforuser(request,pk):
@@ -327,3 +328,4 @@ def eventmodesforuser(request,pk):
     event_modes = EventMode.objects.filter(band=band)
     serializer = EventModeSerializer(event_modes, many=True)
     return Response(serializer.data)
+

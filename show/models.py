@@ -23,7 +23,6 @@ class EventMode(models.Model):
         return self.event_mode_name
 
 
-
 class Event(models.Model):
     def upload_location(instance, filename):
         return "event_images/%s/%s" % (instance.event_name, filename)

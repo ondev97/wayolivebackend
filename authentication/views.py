@@ -86,8 +86,8 @@ def listuserprofiles(request):
     return Response(serializer.data)
 
 @api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def viewprofile(request):
-    print(request.user.username, request.user.is_band)
     if request.user.is_band:
         user = BandProfile.objects.get(user=request.user)
         serializer = BandProfileSerializer(user)
