@@ -137,16 +137,21 @@ def TestLoginView(request):
         "status" : status
     })
 
-@api_view(['GET'])
-def resetloginview(request,username):
-    user = User.objects.get(username=username)
-    user_token = Token.objects.filter(user=user)
-    if user_token:
-        user_token.delete()
-        return Response({
-            "msg":"Login Session Reset Successfully"
-        },status=200)
+@api_view(['POST'])
+def resetloginview(request):
+    user = User.objects.get(username=request.data['username'])
+    if user.check_password(request.data['password']):
+        user_token = Token.objects.filter(user=user)
+        if user_token:
+            user_token.delete()
+            return Response({
+                "msg":"Login Session Reset Successfully"
+            },status=200)
+        else:
+            return Response({
+                "msg":"Login Session with this Username not Found"
+            },status=404)
     else:
         return Response({
-            "msg":"Login Session with this Username not Found"
-        },status=404)
+            "msg":"Invalid Credentials"
+        },status=403)
