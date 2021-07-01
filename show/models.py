@@ -79,6 +79,7 @@ class Ticket(models.Model):
 
 
 class AudienceDataForm(models.Model):
+    id = models.CharField(max_length=3,null=True,blank=True)
     username = models.CharField(max_length=200,null=True,blank=True)
     first_name = models.CharField(max_length=300,null=True,blank=True)
     last_name = models.CharField(max_length=300,null=True,blank=True)
