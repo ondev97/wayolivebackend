@@ -7,6 +7,7 @@ class EventModeSerializer(serializers.ModelSerializer):
         model = EventMode
         fields = '__all__'
 
+
 class EventModeListSerializer(serializers.ModelSerializer):
     class Meta:
         model = EventMode
@@ -19,6 +20,7 @@ class EventSerializer(serializers.ModelSerializer):
     class Meta:
         model = Event
         fields = '__all__'
+
 
 class EventViewSerializer(serializers.ModelSerializer):
     class Meta:
@@ -45,5 +47,12 @@ class MyEventsSerializer(serializers.ModelSerializer):
         model = Enrollment
         fields = ['event', 'ticket_number']
         depth = 2
+
+
+class AudienceDataSerializer(serializers.ModelSerializer):
+    class Meta:
+        model=AudienceDataForm
+        fields = "__all__"
+
 
 

@@ -48,6 +48,9 @@ urlpatterns = [
 
     path('myevents/',views.myevents),
 
+    # Audience_data_collect
+
+    path('collectdata/',views.audiencedatacollect),
 
 
 

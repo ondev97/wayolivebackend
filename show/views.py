@@ -329,3 +329,15 @@ def eventmodesforuser(request,pk):
     serializer = EventModeSerializer(event_modes, many=True)
     return Response(serializer.data)
 
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def audiencedatacollect(request):
+    serializer = AudienceDataSerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data,status=200)
+    else:
+        return Response({
+            "err":"Something Went Wrong"
+        })

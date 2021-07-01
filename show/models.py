@@ -78,7 +78,14 @@ class Ticket(models.Model):
         return self.ticket_number + "  issued: " + str(self.isIssued)
 
 
+class AudienceDataForm(models.Model):
+    username = models.CharField(max_length=200,null=True,blank=True)
+    first_name = models.CharField(max_length=300,null=True,blank=True)
+    last_name = models.CharField(max_length=300,null=True,blank=True)
+    email = models.EmailField(max_length=400,null=True,blank=True)
+    phone_number = models.CharField(max_length=15,null=True,blank=True)
 
-
+    def __str__(self):
+        return self.first_name+" "+self.last_name
 
 
