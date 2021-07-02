@@ -307,7 +307,7 @@ def audienceinthevent(request,pk):
             user_ids.append(c.user.id)
     users = UserProfile.objects.filter(id__in=user_ids)
     paginator = PageNumberPagination()
-    paginator.page_size = 10
+    paginator.page_size = 100
     result_page = paginator.paginate_queryset(users,request)
     serializer = UserProfileSerializer(result_page, many=True)
     for i in range(len(serializer.data)):
