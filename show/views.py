@@ -6,7 +6,7 @@ from aifc import Error
 from authentication.serializer import UserProfileSerializer
 from .serializer import *
 from .filter import *
-
+from rest_framework.pagination import PageNumberPagination
 from .models import *
 
 
@@ -306,10 +306,13 @@ def audienceinthevent(request,pk):
         if c.user.id not in user_ids:
             user_ids.append(c.user.id)
     users = UserProfile.objects.filter(id__in=user_ids)
-    serializer = UserProfileSerializer(users, many=True)
+    paginator = PageNumberPagination()
+    paginator.page_size = 5
+    result_page = paginator.paginate_queryset(users,request)
+    serializer = UserProfileSerializer(result_page, many=True)
     for i in range(len(serializer.data)):
         serializer.data[i]['user'].pop('password')
-    return Response(serializer.data)
+    return paginator.get_paginated_response(serializer.data)
 
 
 @api_view(['GET'])
