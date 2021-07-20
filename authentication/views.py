@@ -226,7 +226,7 @@ class activate_user(APIView):
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
-# @parser_classes([MultiPartParser])
+@parser_classes([MultiPartParser, FormParser])
 def users_registration(request):
     excel_file = request.FILES["excel_file"]
     wb = openpyxl.load_workbook(excel_file)
