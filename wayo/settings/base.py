@@ -51,7 +51,8 @@ INSTALLED_APPS = [
     'allauth.socialaccount',
     'dj_rest_auth.registration',
     'corsheaders',
-
+    'sms',
+    'openpyxl',
 ]
 
 CORS_ALLOW_ALL_ORIGINS = True
@@ -160,4 +161,4 @@ USE_L10N = True
 
 USE_TZ = True
 
-
+SMS_BACKEND = 'sms.backends.console.SmsBackend'

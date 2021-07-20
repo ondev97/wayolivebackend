@@ -1,15 +1,14 @@
 from dj_rest_auth.serializers import TokenSerializer
 
-
-from authentication.models import User,BandProfile,UserProfile
+from authentication.models import User, BandProfile, UserProfile
 from rest_framework import serializers
 
 
 class UserSerializerAPI(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['username','email','password','phone_no','first_name','last_name']
-        extra_kwargs = {"password":{"write_only":True}}
+        fields = ['username', 'email', 'password', 'phone_no', 'first_name', 'last_name']
+        extra_kwargs = {"password": {"write_only": True}}
 
 
 class BandProfileSerializer(serializers.ModelSerializer):
@@ -32,10 +31,11 @@ class UserProfileSerializer(serializers.ModelSerializer):
         fields = '__all__'
         depth = 1
 
+
 class UserTokenSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('id', 'email','is_band')
+        fields = ('id', 'email', 'is_band', 'is_verified')
 
 
 class CustomTokenSerializer(TokenSerializer):
@@ -43,3 +43,9 @@ class CustomTokenSerializer(TokenSerializer):
 
     class Meta(TokenSerializer.Meta):
         fields = ('key', 'user')
+
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['username', 'email', 'phone_no', 'first_name', 'last_name']

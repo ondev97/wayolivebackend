@@ -1,3 +1,5 @@
+from django.contrib.auth.hashers import make_password
+from django.core.exceptions import ObjectDoesNotExist
 from django.shortcuts import render
 
 # Create your views here.
@@ -14,6 +16,9 @@ from .serializer import *
 
 from .models import *
 
+import random
+from sms import send_sms
+import openpyxl
 
 class createuser(CreateAPIView):
     serializer_class = UserSerializerAPI
@@ -54,7 +59,7 @@ def updateuserprofile(request, pk):
         return Response(serializer.data)
     else:
         return Response(serializer.errors)
-    
+
 
 
 @api_view(['POST'])
@@ -155,3 +160,94 @@ def resetloginview(request):
         return Response({
             "msg":"Invalid credentials"
         },status=401)
+
+def get_otp(phone):
+    try:
+        mobile = Phone.objects.get(mobile=phone)
+    except ObjectDoesNotExist:
+        Phone.objects.create(
+            mobile=phone,
+        )
+        mobile = Phone.objects.get(mobile=phone)
+    mobile.otp = str(random.randint(100000, 999999))
+    mobile.save()
+
+    return mobile
+
+def verify_otp(phone, otp):
+    response = {
+        'is_verified': False
+    }
+    try:
+        mobile = Phone.objects.get(mobile=phone)
+    except ObjectDoesNotExist:
+        response['message'] = "User does not exist"
+        return response, 404
+
+    if otp == mobile.otp:
+        response['message'] = "You are authorised"
+        response['is_verified'] = True
+        return response, 200
+
+    response['message'] = "OTP is wrong"
+    return response, 400
+
+
+class activate_user(APIView):
+    @staticmethod
+    def get(request, phone):
+        mobile = get_otp(phone)
+
+        try:
+            send_sms(
+                'Your verification code is ' + mobile.otp + '.\nWAYO LIVE!!!',
+                '+12065550100',
+                [mobile.mobile],
+                fail_silently=False
+            )
+            return Response({"message": "OTP was sent successfully", "Mobile": mobile.mobile}, status=200)
+
+        except:
+            print("An exception occurred")
+            return Response({"message": "Something is wrong", "Mobile": mobile.mobile}, status=503)
+
+    @staticmethod
+    def post(request, phone):
+        response, status = verify_otp(phone, request.data["otp"])
+        if response['is_verified']:
+            user = User.objects.get(phone_no=phone)
+            print(user)
+            user.is_verified = True
+            user.save()
+            response['message'] = "You are verified"
+        return Response(response, status=status)
+
+
+
+@api_view(['POST'])
+def users_registration(request):
+    # user = User.objects.create(username='Test', password=make_password('1234'), first_name='First', last_name='Last', email='test@gmail.com', phone_no='+94000000000')
+
+    excel_file = request.FILES["excel_file"]
+    wb = openpyxl.load_workbook(excel_file)
+    worksheet = wb["Sheet1"]
+    worksheet.delete_rows(worksheet.min_row, 1)
+
+    excel_data = list()
+    for row in worksheet.iter_rows():
+        row_data = list()
+        for cell in row:
+            row_data.append(str(cell.value))
+        excel_data.append(row_data)
+
+    users = User.objects.bulk_create(
+        [
+            User(username=row[0], password=make_password(row[1]), first_name=row[2], last_name=row[3], email=row[4], phone_no=row[5])
+            for row in excel_data
+        ], ignore_conflicts=True
+    )
+
+    return Response({
+        "users": UserSerializer(users, many=True).data
+    }, status=200)
+

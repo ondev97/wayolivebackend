@@ -13,4 +13,6 @@ urlpatterns = [
     path('checkuser/',views.TestLoginView),
     path('notinevent/<int:id>/',views.getusersnotinevent),
     path('deletetoken/',views.resetloginview),
+    path('activate_user/<str:phone>/', views.activate_user.as_view()),
+    path('reg_users/',views.users_registration),
 ]

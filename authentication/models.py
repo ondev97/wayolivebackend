@@ -17,8 +17,9 @@ class User(AbstractUser):
     first_name = models.CharField(max_length=50, null=True, blank=True)
     last_name = models.CharField(max_length=50, null=True, blank=True)
     email = models.EmailField(max_length=80,unique=True)
-    phone_no = models.CharField(max_length=15,null=True,blank=True)
+    phone_no = models.CharField(max_length=15,null=True,blank=True, unique=True)
     is_band = models.BooleanField(default=False)
+    is_verified = models.BooleanField(default=False)
 
 
 class BandProfile(models.Model):
@@ -87,6 +88,14 @@ def saveprofile(sender, instance, **kwargs):
     else:
         print("status",instance.is_superuser)
         UserProfile.objects.get_or_create(user=instance)
+
+
+class Phone(models.Model):
+    mobile = models.CharField(max_length=15, default="0000000000")
+    otp = models.CharField(max_length=6, default="100001")
+
+    def __str__(self):
+        return str(self.mobile)
 
 
 

@@ -1,6 +1,8 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import User,BandProfile,UserProfile
+from .models import User, BandProfile, UserProfile, Phone
+
+
 # Register your models here.
 class CustomUserAdmin(UserAdmin):
     fieldsets = (
@@ -11,6 +13,7 @@ class CustomUserAdmin(UserAdmin):
                 'fields': (
                     'is_band',
                     'phone_no',
+                    'is_verified',
                 ),
             },
         ),
@@ -20,3 +23,5 @@ class CustomUserAdmin(UserAdmin):
 admin.site.register(User,CustomUserAdmin)
 admin.site.register(BandProfile)
 admin.site.register(UserProfile)
+admin.site.register(Phone)
+
