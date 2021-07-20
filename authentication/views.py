@@ -8,7 +8,7 @@ from rest_framework.exceptions import APIException
 from rest_framework.generics import CreateAPIView, RetrieveUpdateAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.parsers import MultiPartParser, FormParser, FileUploadParser
 from rest_framework.views import APIView
 from rest_framework.authtoken.models import Token
 from show.models import Enrollment
@@ -226,7 +226,7 @@ class activate_user(APIView):
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
-@parser_classes([MultiPartParser,FormParser])
+@parser_classes([FileUploadParser])
 def users_registration(request):
     excel_file = request.FILES["excel_file"]
     wb = openpyxl.load_workbook(excel_file)
