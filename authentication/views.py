@@ -225,6 +225,7 @@ class activate_user(APIView):
 
 
 @api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def users_registration(request):
     # user = User.objects.create(username='Test', password=make_password('1234'), first_name='First', last_name='Last', email='test@gmail.com', phone_no='+94000000000')
 
