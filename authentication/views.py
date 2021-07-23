@@ -1,3 +1,4 @@
+from decouple import config
 from django.contrib.auth.hashers import make_password
 from django.core.exceptions import ObjectDoesNotExist
 from django.shortcuts import render
@@ -19,6 +20,8 @@ from .models import *
 import random
 from sms import send_sms
 import openpyxl
+import urllib
+import requests
 
 
 class createuser(CreateAPIView):
@@ -201,19 +204,32 @@ class activate_user(APIView):
     @staticmethod
     def get(request, phone):
         mobile = get_otp(phone)
-
+        verify_msg = 'Your OTP is ' + mobile.otp + ' to verify WAYO.LIVE account.'
+        params = {
+            'id' : config('TEXTIT_ID'),
+            'pw' : config('TEXTIT_PW'),
+            'to' : mobile.mobile,
+            'text' : verify_msg,
+        }
+        url = 'https://www.textit.biz/sendmsg/?' + urllib.parse.urlencode(params)
         try:
-            send_sms(
-                'Your verification code is ' + mobile.otp + '.\nWAYO LIVE!!!',
-                '+12065550100',
-                [mobile.mobile],
-                fail_silently=False
-            )
-            return Response({"message": "OTP was sent successfully", "Mobile": mobile.mobile}, status=200)
-
+            response = requests.get(url)
+            # text = "OK:Cr=0.71,Route=CSID-WAYO,MessageID=7171-1627019618,Recipient=754745340,BX=23-152\n"
+            if response.text.split(':')[0] == 'OK':
+                return Response({
+                    "message": "Verification code sent successfully",
+                    "mobile": mobile.mobile,
+                    "res": response.text
+                }, status=200)
+            else:
+                return Response({
+                    "message": "Verification code was not sent",
+                    "mobile": mobile.mobile,
+                    "res": response.text
+                }, status=400)
         except:
             print("An exception occurred")
-            return Response({"message": "Something is wrong", "Mobile": mobile.mobile}, status=503)
+            return Response({"message": "Something is wrong", "mobile": mobile.mobile}, status=503)
 
     @staticmethod
     def post(request, phone):
