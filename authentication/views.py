@@ -134,19 +134,18 @@ def getusersnotinevent(request, id):
 @api_view(['POST'])
 def TestLoginView(request):
     user = User.objects.filter(username=request.data['username']).first()
-    status = False
-    verified = user.is_verified
-    if not user:
-        return Response({
-            "status": status
-        })
-    token = Token.objects.filter(user=user).first()
-    if token:
-        status = True
-    return Response({
-        "status": status,
-        'is_verified': verified
-    })
+    response = {}
+    if user and user.check_password(request.data['password']):
+        response['is_verified'] = user.is_verified
+        response['phone_no'] = user.phone_no
+        token = Token.objects.filter(user=user).first()
+        if token:
+            response['status'] = True
+        else:
+            response['status'] = False
+    else:
+        return Response({'non_field_errors': ['Unable to log in with provided credentials.']}, status=400)
+    return Response(response, status=200)
 
 
 @api_view(['POST'])
