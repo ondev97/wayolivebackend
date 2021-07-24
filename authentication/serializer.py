@@ -35,7 +35,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
 class UserTokenSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('id', 'email', 'is_band', 'is_verified')
+        fields = ('id', 'email', 'is_band', 'is_verified','phone_no')
 
 
 class CustomTokenSerializer(TokenSerializer):
