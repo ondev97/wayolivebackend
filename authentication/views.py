@@ -135,6 +135,7 @@ def getusersnotinevent(request, id):
 def TestLoginView(request):
     user = User.objects.filter(username=request.data['username']).first()
     status = False
+    verified = user.is_verified
     if not user:
         return Response({
             "status": status
@@ -143,7 +144,8 @@ def TestLoginView(request):
     if token:
         status = True
     return Response({
-        "status": status
+        "status": status,
+        'is_verified': verified
     })
 
 
@@ -224,7 +226,7 @@ class activate_user(APIView):
             else:
                 return Response({
                     "message": "Verification code was not sent",
-                    "mobile": mobile.mobile,
+                    "mobile": mobile.mobile[1:] if mobile.mobile[0] == '+' else mobile.mobile,
                     "res": response.text
                 }, status=400)
         except:
