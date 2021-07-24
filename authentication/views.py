@@ -1,3 +1,4 @@
+from decouple import config
 from django.contrib.auth.hashers import make_password
 from django.core.exceptions import ObjectDoesNotExist
 from django.shortcuts import render
@@ -8,7 +9,7 @@ from rest_framework.exceptions import APIException
 from rest_framework.generics import CreateAPIView, RetrieveUpdateAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.parsers import MultiPartParser, FormParser, FileUploadParser
 from rest_framework.views import APIView
 from rest_framework.authtoken.models import Token
 from show.models import Enrollment
@@ -19,6 +20,9 @@ from .models import *
 import random
 from sms import send_sms
 import openpyxl
+import urllib
+import requests
+
 
 class createuser(CreateAPIView):
     serializer_class = UserSerializerAPI
@@ -27,7 +31,6 @@ class createuser(CreateAPIView):
         instance = serializer.save()
         instance.set_password(instance.password)
         instance.save()
-
 
 
 class updateuser(RetrieveUpdateAPIView):
@@ -46,13 +49,12 @@ class updateuser(RetrieveUpdateAPIView):
             raise APIException("Password's not matching")
 
 
-
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
-@parser_classes([MultiPartParser,FormParser])
+@parser_classes([MultiPartParser, FormParser])
 def updateuserprofile(request, pk):
     user = UserProfile.objects.get(user_id=pk)
-    serializer = UserProfileSerializer(instance=user,data=request.data)
+    serializer = UserProfileSerializer(instance=user, data=request.data)
     if serializer.is_valid():
         serializer.save()
         serializer.data['user'].pop('password')
@@ -61,13 +63,12 @@ def updateuserprofile(request, pk):
         return Response(serializer.errors)
 
 
-
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
-@parser_classes([MultiPartParser,FormParser])
-def updatebandprofileview(request,pk):
+@parser_classes([MultiPartParser, FormParser])
+def updatebandprofileview(request, pk):
     user = BandProfile.objects.get(user_id=pk)
-    serializer = BandProfileSerializer(instance=user,data=request.data)
+    serializer = BandProfileSerializer(instance=user, data=request.data)
     if serializer.is_valid():
         serializer.save()
         serializer.data['user'].pop('password')
@@ -77,18 +78,20 @@ def updatebandprofileview(request,pk):
 @api_view(['GET'])
 def listbandprofiles(request):
     bands = BandProfile.objects.all()
-    serializer = ViewBandProfileSerializer(bands,many=True)
+    serializer = ViewBandProfileSerializer(bands, many=True)
     for i in range(len(serializer.data)):
         serializer.data[i]['user'].pop('password')
     return Response(serializer.data)
 
+
 @api_view(['GET'])
 def listuserprofiles(request):
     users = UserProfile.objects.all()
-    serializer = UserProfileSerializer(users,many=True)
+    serializer = UserProfileSerializer(users, many=True)
     for i in range(len(serializer.data)):
         serializer.data[i]['user'].pop('password')
     return Response(serializer.data)
+
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -101,6 +104,7 @@ def viewprofile(request):
         serializer = UserProfileSerializer(user)
     serializer.data['user'].pop('password')
     return Response(serializer.data)
+
 
 # Logout View
 class LogoutView(APIView):
@@ -121,7 +125,7 @@ def getusersnotinevent(request, id):
     for e in enr:
         enrollments.append(e.user.id)
     users = UserProfile.objects.exclude(id__in=enrollments)
-    serializer = UserProfileSerializer(users,many=True)
+    serializer = UserProfileSerializer(users, many=True)
     for i in range(len(serializer.data)):
         serializer.data[i]['user'].pop('password')
     return Response(serializer.data)
@@ -139,8 +143,9 @@ def TestLoginView(request):
     if token:
         status = True
     return Response({
-        "status" : status
+        "status": status
     })
+
 
 @api_view(['POST'])
 def resetloginview(request):
@@ -150,16 +155,17 @@ def resetloginview(request):
         if user_token:
             user_token.delete()
             return Response({
-                "msg":"Login session has been reset successfully"
-            },status=200)
+                "msg": "Login session has been reset successfully"
+            }, status=200)
         else:
             return Response({
-                "msg":"Login session with this username not found"
-            },status=404)
+                "msg": "Login session with this username not found"
+            }, status=404)
     else:
         return Response({
-            "msg":"Invalid credentials"
-        },status=401)
+            "msg": "Invalid credentials"
+        }, status=401)
+
 
 def get_otp(phone):
     try:
@@ -173,6 +179,7 @@ def get_otp(phone):
     mobile.save()
 
     return mobile
+
 
 def verify_otp(phone, otp):
     response = {
@@ -197,19 +204,32 @@ class activate_user(APIView):
     @staticmethod
     def get(request, phone):
         mobile = get_otp(phone)
-
+        verify_msg = 'Your OTP is ' + mobile.otp + ' to verify WAYO.LIVE account.'
+        params = {
+            'id' : config('TEXTIT_ID'),
+            'pw' : config('TEXTIT_PW'),
+            'to' : mobile.mobile,
+            'text' : verify_msg,
+        }
+        url = 'https://www.textit.biz/sendmsg/?' + urllib.parse.urlencode(params)
         try:
-            send_sms(
-                'Your verification code is ' + mobile.otp + '.\nWAYO LIVE!!!',
-                '+12065550100',
-                [mobile.mobile],
-                fail_silently=False
-            )
-            return Response({"message": "OTP was sent successfully", "Mobile": mobile.mobile}, status=200)
-
+            response = requests.get(url)
+            # text = "OK:Cr=0.71,Route=CSID-WAYO,MessageID=7171-1627019618,Recipient=754745340,BX=23-152\n"
+            if response.text.split(':')[0] == 'OK':
+                return Response({
+                    "message": "Verification code sent successfully",
+                    "mobile": mobile.mobile,
+                    "res": response.text
+                }, status=200)
+            else:
+                return Response({
+                    "message": "Verification code was not sent",
+                    "mobile": mobile.mobile,
+                    "res": response.text
+                }, status=400)
         except:
             print("An exception occurred")
-            return Response({"message": "Something is wrong", "Mobile": mobile.mobile}, status=503)
+            return Response({"message": "Something is wrong", "mobile": mobile.mobile}, status=503)
 
     @staticmethod
     def post(request, phone):
@@ -223,11 +243,10 @@ class activate_user(APIView):
         return Response(response, status=status)
 
 
-
 @api_view(['POST'])
+# @permission_classes([IsAuthenticated])
+@parser_classes([MultiPartParser, FormParser])
 def users_registration(request):
-    # user = User.objects.create(username='Test', password=make_password('1234'), first_name='First', last_name='Last', email='test@gmail.com', phone_no='+94000000000')
-
     excel_file = request.FILES["excel_file"]
     wb = openpyxl.load_workbook(excel_file)
     worksheet = wb["Sheet1"]
@@ -240,14 +259,25 @@ def users_registration(request):
             row_data.append(str(cell.value))
         excel_data.append(row_data)
 
-    users = User.objects.bulk_create(
-        [
-            User(username=row[0], password=make_password(row[1]), first_name=row[2], last_name=row[3], email=row[4], phone_no=row[5])
-            for row in excel_data
-        ], ignore_conflicts=True
-    )
+    users = [
+        User(username=row[0], password=make_password(row[1]), first_name=row[2], last_name=row[3], email=row[4],
+             phone_no=row[5])
+        for row in excel_data
+    ]
+    not_saved = list()
+    i = 2
+    try:
+        User.objects.bulk_create(users)
+
+    except:
+        for user in users:
+            try:
+                user.save()
+            except:
+                not_saved.append(i)
+            i+=1
 
     return Response({
-        "users": UserSerializer(users, many=True).data
+        "count_of_all_users": len(excel_data),
+        "not_saved_lines": not_saved
     }, status=200)
-
