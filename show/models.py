@@ -41,6 +41,7 @@ class Event(models.Model):
     event_cover = models.ImageField(null=True, blank=True, upload_to=upload_location, default='event_images/default.jpg')
     event_price = models.IntegerField(null=True,blank=True)
     is_enrolled = models.BooleanField(default=False)
+    limit = models.IntegerField(default=0, null=True, blank=True)
 
     def __str__(self):
         return self.event_name
