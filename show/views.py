@@ -309,12 +309,12 @@ def checkpayment(request, eid):
     user = UserProfile.objects.get(user=request.user)
     enrollment = Enrollment.objects.filter(user=user, event=event).first()
     enrollments = Enrollment.objects.filter(event=event)
-
+    u = UserProfileSerializer(user)
     if enrollment:
         return Response({'is_payable': False, 'enrolled': True}, status=200)
 
     if True:
-        return Response({'is_payable': True, 'payment_id': 23}, status=200)
+        return Response({'is_payable': True, 'payment_id': 23, 'user': u.data}, status=200)
 
     else:
         return Response({'is_payable': False, 'enrolled': False}, status=200)
