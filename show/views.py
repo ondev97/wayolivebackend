@@ -303,6 +303,23 @@ def purchasedevent(request,eid):
 
 
 @api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def checkpayment(request, eid):
+    event = Event.objects.get(id=eid)
+    user = UserProfile.objects.get(user=request.user)
+    enrollment = Enrollment.objects.filter(user=user, event=event).first()
+    enrollments = Enrollment.objects.filter(event=event)
+
+    if enrollment:
+        return Response({'message': 'You have already enrolled'}, status=403)
+
+    if True:
+        return Response({}, status=200)
+    else:
+        return Response({'message': 'Audience limit is exceeded'}, status=403)
+
+
+@api_view(['POST'])
 def notifyurl(request, uid, eid):
     event = Event.objects.get(id=eid)
     user = UserProfile.objects.get(user_id=uid)
@@ -312,20 +329,19 @@ def notifyurl(request, uid, eid):
     if payment_serializer.is_valid():
         payment_serializer.save()
 
-    return Response({}, status=200)
-    # if request.data['status_code'] == 2:
-    #     enrollment = Enrollment.objects.filter(user=user, event=event).first()
-    #     if not enrollment:
-    #         enroll = Enrollment(event=event, user=user, ticket_number="Purchased")
-    #         enroll_serializer = EnrollSerializer(enroll, data=request.data)
-    #         if enroll_serializer.is_valid():
-    #             enroll_serializer.save()
-    #             return Response(enroll_serializer.data)
-    #         return Response(enroll_serializer.errors)
-    #     else:
-    #         return Response({'message': 'You have already enrolled'}, status=403)
-    # else:
-    #     return Response({'message': 'Something was wrong'}, status=403)
+    if request.data['status_code'] == 2:
+        enrollment = Enrollment.objects.filter(user=user, event=event).first()
+        if not enrollment:
+            enroll = Enrollment(event=event, user=user, ticket_number="Purchased", is_payment=True)
+            enroll_serializer = EnrollSerializer(enroll, data=request.data)
+            if enroll_serializer.is_valid():
+                enroll_serializer.save()
+                return Response(enroll_serializer.data)
+            return Response({}, status=200)
+        else:
+            return Response({}, status=403)
+    else:
+        return Response({}, status=403)
 
 
 @api_view(['GET'])
