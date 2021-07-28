@@ -285,6 +285,49 @@ def removefromevent(request, uid, eid):
         return Response({'message': 'No entry found'}, status=404)
 
 
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def purchasedevent(request,eid):
+    event = Event.objects.get(id=eid)
+    user = UserProfile.objects.get(user=request.user)
+    enrollment = Enrollment.objects.filter(user=user, event=event).first()
+    if not enrollment:
+        enroll = Enrollment(event=event, user=user, ticket_number="Purchased")
+        enroll_serializer = EnrollSerializer(enroll, data=request.data)
+        if enroll_serializer.is_valid():
+            enroll_serializer.save()
+            return Response(enroll_serializer.data)
+        return Response(enroll_serializer.errors)
+    else:
+        return Response({'message': 'You have already enrolled'}, status=403)
+
+
+@api_view(['POST'])
+def notifyurl(request, uid, eid):
+    event = Event.objects.get(id=eid)
+    user = UserProfile.objects.get(user_id=uid)
+
+    payment = Payment(user=user, event=event)
+    payment_serializer = PaymentSerializer(payment, data=request.data)
+    if payment_serializer.is_valid():
+        payment_serializer.save()
+
+    return Response({}, status=200)
+    # if request.data['status_code'] == 2:
+    #     enrollment = Enrollment.objects.filter(user=user, event=event).first()
+    #     if not enrollment:
+    #         enroll = Enrollment(event=event, user=user, ticket_number="Purchased")
+    #         enroll_serializer = EnrollSerializer(enroll, data=request.data)
+    #         if enroll_serializer.is_valid():
+    #             enroll_serializer.save()
+    #             return Response(enroll_serializer.data)
+    #         return Response(enroll_serializer.errors)
+    #     else:
+    #         return Response({'message': 'You have already enrolled'}, status=403)
+    # else:
+    #     return Response({'message': 'Something was wrong'}, status=403)
+
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def eventsinband(request):

@@ -89,3 +89,14 @@ class AudienceDataForm(models.Model):
     def __str__(self):
         return self.first_name
 
+class Payment(models.Model):
+    user = models.ForeignKey(UserProfile,on_delete=models.CASCADE,null=True)
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, null=True)
+    merchant_id = models.CharField(max_length=100,null=True,blank=True)
+    order_id = models.CharField(max_length=100,null=True,blank=True)
+    payhere_amount = models.CharField(max_length=100,null=True,blank=True)
+    payhere_currency = models.CharField(max_length=100,null=True,blank=True)
+    status_code = models.CharField(max_length=100,null=True,blank=True)
+
+    def __str__(self):
+        return self.order_id

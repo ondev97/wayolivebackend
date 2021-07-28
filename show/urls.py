@@ -34,6 +34,8 @@ urlpatterns = [
     path('addtoevent/<int:eid>/', views.addtoevent),
     path('addtoeventbyband/<int:eid>/', views.addtoeventbyband),
     path('freeevent/<int:eid>/',views.freeentry),
+    path('purchasedevent/<int:eid>/',views.purchasedevent),
+    path('notifyurl/<int:uid>/<int:eid>/',views.notifyurl),
     path('remove/<int:eid>/<int:uid>/', views.removefromevent),
 
     # events in band
