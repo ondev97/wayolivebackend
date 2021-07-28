@@ -329,15 +329,15 @@ def notifyurl(request, uid, eid):
     if payment_serializer.is_valid():
         payment_serializer.save()
 
-    if request.data['status_code'] == 2:
+    if str(request.data['status_code']) == '2':
         enrollment = Enrollment.objects.filter(user=user, event=event).first()
         if not enrollment:
             enroll = Enrollment.objects.create(event=event, user=user, ticket_number="Purchased", is_payment=True)
-            return Response({}, status=200)
+            return Response({'message': 'success'}, status=200)
         else:
-            return Response({}, status=403)
+            return Response({'message': 'already enrolled'}, status=403)
     else:
-        return Response({}, status=403)
+        return Response({'message': 'payment error'}, status=403)
 
 
 @api_view(['GET'])
