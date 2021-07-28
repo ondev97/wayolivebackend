@@ -311,12 +311,13 @@ def checkpayment(request, eid):
     enrollments = Enrollment.objects.filter(event=event)
 
     if enrollment:
-        return Response({'message': 'You have already enrolled'}, status=403)
+        return Response({'is_payable': False, 'enrolled': True}, status=200)
 
     if True:
         return Response({'is_payable': True, 'payment_id': 23}, status=200)
+
     else:
-        return Response({'message': 'Audience limit is exceeded'}, status=403)
+        return Response({'is_payable': False, 'enrolled': False}, status=200)
 
 
 @api_view(['POST'])
