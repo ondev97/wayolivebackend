@@ -292,7 +292,7 @@ def purchasedevent(request,eid):
     user = UserProfile.objects.get(user=request.user)
     enrollment = Enrollment.objects.filter(user=user, event=event).first()
     if not enrollment:
-        enroll = Enrollment(event=event, user=user, ticket_number="Purchased")
+        enroll = Enrollment(event=event, user=user, ticket_number="Purchased", is_payment=True)
         enroll_serializer = EnrollSerializer(enroll, data=request.data)
         if enroll_serializer.is_valid():
             enroll_serializer.save()
@@ -314,7 +314,7 @@ def checkpayment(request, eid):
         return Response({'is_payable': False, 'enrolled': True}, status=200)
 
     if event.limit > len(enrollments):
-        return Response({'is_payable': True, 'payment_id': 23, 'user': u.data}, status=200)
+        return Response({'is_payable': True, 'payment_id': user.id+'-'+event.id, 'user': u.data}, status=200)
 
     else:
         return Response({'is_payable': False, 'enrolled': False}, status=200)
