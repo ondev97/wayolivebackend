@@ -136,7 +136,7 @@ def TestLoginView(request):
     user = User.objects.filter(username=request.data['username']).first()
     response = {}
     if user and user.check_password(request.data['password']):
-        response['is_verified'] = user.is_verified
+        response['is_verified'] = True if user.is_band else user.is_verified
         response['phone_no'] = user.phone_no
         token = Token.objects.filter(user=user).first()
         if token:
