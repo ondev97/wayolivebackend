@@ -21,6 +21,7 @@ urlpatterns = [
     path('viewevent/<int:pk>/',views.viewevent),
     path('updateevent/<int:pk>/<int:id>/',views.updateevent),
     path('deleteevent/<int:pk>/',views.deletevent),
+    path('latestevent/',views.latestevent),
 
     # ticket urls
 

@@ -136,6 +136,7 @@ def TestLoginView(request):
     user = User.objects.filter(username=request.data['username']).first()
     response = {}
     if user and user.check_password(request.data['password']):
+        response['completed_user'] = True if user.first_name and user.last_name and user.email and user.phone_no else False
         response['is_verified'] = True if user.is_band else user.is_verified
         response['phone_no'] = user.phone_no
         token = Token.objects.filter(user=user).first()
@@ -261,8 +262,7 @@ def users_registration(request):
         excel_data.append(row_data)
 
     users = [
-        User(username=row[0], password=make_password(row[1]), first_name=row[2], last_name=row[3], email=row[4],
-             phone_no=row[5])
+        User(username=row[0], password=make_password(row[1]))        #, first_name=row[2], last_name=row[3], email=row[4], phone_no=row[5])
         for row in excel_data
     ]
     not_saved = list()

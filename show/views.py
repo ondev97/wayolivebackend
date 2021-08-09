@@ -400,3 +400,12 @@ def audiencedatacollect(request):
         return Response({
             "err":"Something Went Wrong"
         })
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def latestevent(request):
+    event = Event.objects.filter().order_by('-event_date').first()
+    serializer = EventSerializer(event)
+    return Response(serializer.data)
+
