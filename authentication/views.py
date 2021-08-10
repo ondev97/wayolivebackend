@@ -34,7 +34,7 @@ class createuser(CreateAPIView):
 
 
 class updateuser(RetrieveUpdateAPIView):
-    permission_classes = (IsAuthenticated,)
+    # permission_classes = (IsAuthenticated,)
     serializer_class = UserSerializerAPI
     queryset = User.objects.all()
 
@@ -50,17 +50,20 @@ class updateuser(RetrieveUpdateAPIView):
 
 
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])
+# @permission_classes([IsAuthenticated])
 @parser_classes([MultiPartParser, FormParser])
 def updateuserprofile(request, pk):
     user = UserProfile.objects.get(user_id=pk)
-    serializer = UserProfileSerializer(instance=user, data=request.data)
-    if serializer.is_valid():
-        serializer.save()
-        serializer.data['user'].pop('password')
-        return Response(serializer.data)
+    if user.check_password(request.data['password']):
+        serializer = UserProfileSerializer(instance=user, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            serializer.data['user'].pop('password')
+            return Response(serializer.data)
+        else:
+            return Response(serializer.errors)
     else:
-        return Response(serializer.errors)
+        return Response({'invalid credentials'}, status=401)
 
 
 @api_view(['POST'])
@@ -246,7 +249,7 @@ class activate_user(APIView):
 
 
 @api_view(['POST'])
-# @permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated])
 @parser_classes([MultiPartParser, FormParser])
 def users_registration(request):
     excel_file = request.FILES["excel_file"]

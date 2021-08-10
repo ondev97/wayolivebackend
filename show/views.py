@@ -406,6 +406,9 @@ def audiencedatacollect(request):
 @permission_classes([IsAuthenticated])
 def latestevent(request):
     event = Event.objects.filter().order_by('-event_date').first()
-    serializer = EventSerializer(event)
-    return Response(serializer.data)
+    if event:
+        serializer = EventSerializer(event)
+        return Response(serializer.data)
+    else:
+        return Response('no data found', status=404)
 
