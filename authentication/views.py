@@ -121,7 +121,7 @@ class LogoutView(APIView):
 
 
 @api_view(['GET'])
-# @permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated])
 def getusersnotinevent(request, id):
     enr = Enrollment.objects.filter(event_id=id)
     enrollments = []
@@ -144,7 +144,7 @@ def TestLoginView(request):
         response['phone_no'] = user.phone_no
         token = Token.objects.filter(user=user).first()
         if token:
-            response['status'] = True
+            response['status'] = False if user.is_band else True
         else:
             response['status'] = False
     else:
