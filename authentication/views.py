@@ -140,6 +140,7 @@ def TestLoginView(request):
     response = {}
     if user and user.check_password(request.data['password']):
         response['user_id'] = user.id
+        response['username'] = user.username
         response['completed_user'] = True if user.first_name and user.last_name and user.email and user.phone_no else False
         response['is_verified'] = True if user.is_band else user.is_verified
         response['phone_no'] = user.phone_no
