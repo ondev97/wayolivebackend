@@ -403,7 +403,7 @@ def audiencedatacollect(request):
 
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+# @permission_classes([IsAuthenticated])
 def latestevent(request):
     event = Event.objects.filter().order_by('-event_date', '-event_start').first()
     if event:
