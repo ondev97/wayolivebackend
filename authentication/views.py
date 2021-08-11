@@ -139,6 +139,7 @@ def TestLoginView(request):
     user = User.objects.filter(username=request.data['username']).first()
     response = {}
     if user and user.check_password(request.data['password']):
+        response['user_id'] = user.id
         response['completed_user'] = True if user.first_name and user.last_name and user.email and user.phone_no else False
         response['is_verified'] = True if user.is_band else user.is_verified
         response['phone_no'] = user.phone_no
@@ -249,7 +250,7 @@ class activate_user(APIView):
 
 
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])
+# @permission_classes([IsAuthenticated])
 @parser_classes([MultiPartParser, FormParser])
 def users_registration(request):
     excel_file = request.FILES["excel_file"]
