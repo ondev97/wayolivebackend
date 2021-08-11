@@ -39,7 +39,8 @@ class updateuser(RetrieveUpdateAPIView):
     queryset = User.objects.all()
 
     def perform_update(self, serializer):
-        if self.request.user.check_password(self.request.data['password']):
+        user = User.objects.get(id=self.kwargs['pk'])
+        if user.check_password(self.request.data['password']):
             instance = serializer.save()
             print(instance.password)
             instance.set_password(instance.password)
