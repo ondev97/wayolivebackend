@@ -314,7 +314,7 @@ def checkpayment(request, eid):
         return Response({'is_payable': False, 'enrolled': True}, status=200)
 
     if event.limit > len(enrollments):
-        return Response({'is_payable': True, 'payment_id': user.id+'-'+event.id, 'user': u.data}, status=200)
+        return Response({'is_payable': True, 'payment_id': str(user.id)+'-'+str(event.id), 'user': u.data}, status=200)
 
     else:
         return Response({'is_payable': False, 'enrolled': False}, status=200)
