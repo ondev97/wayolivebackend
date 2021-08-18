@@ -1,3 +1,4 @@
+import datetime
 import hashlib
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
@@ -8,6 +9,7 @@ from .serializer import *
 from .filter import *
 from rest_framework.pagination import PageNumberPagination
 from .models import *
+from datetime import date
 
 
 @api_view(['POST'])
@@ -345,7 +347,8 @@ def notifyurl(request, uid, eid):
 @permission_classes([IsAuthenticated])
 def eventsinband(request):
     band = BandProfile.objects.get(user=request.user)
-    events = Event.objects.filter(band=band)
+    today = date.today() - datetime.timedelta(1)
+    events = Event.objects.filter(band=band, event_date__gt=today)
     serializer = EventViewSerializer(events,many=True)
     for i in range(len(serializer.data)):
         serializer.data[i]['band']['user'].pop('password')
@@ -405,10 +408,24 @@ def audiencedatacollect(request):
 @api_view(['GET'])
 # @permission_classes([IsAuthenticated])
 def latestevent(request):
-    event = Event.objects.filter().order_by('-event_date', '-event_start').first()
+    today = date.today()
+    event = Event.objects.filter(event_date__gt=today, is_freeze=False).order_by('event_date', 'event_start').first()
+    print(today, event.event_date)
     if event:
         serializer = EventSerializer(event)
         return Response(serializer.data)
     else:
         return Response('no data found', status=404)
+
+
+# @api_view(['GET'])
+# @permission_classes([IsAuthenticated])
+# def testevent(request):
+#     today = date.today() - datetime.timedelta(1)
+#     now = datetime.datetime.now()
+#     time = str(now)[10:16]
+#     events = Event.objects.filter(event_date__gt=today)
+#     print(now, time, today, events)
+#     event_serialiser = EventSerializer(events, many=True)
+#     return Response(event_serialiser.data, status=200)
 

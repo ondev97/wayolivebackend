@@ -50,7 +50,6 @@ class UserProfile(models.Model):
     def upload_location(instance, filename):
         return "user_images/%s/%s" % (instance.user.username, filename)
 
-
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     user_description = models.TextField(null=True,blank=True)
     user_image = models.ImageField(null=True,blank=True, upload_to=upload_location, default='user_images/default.jpg')
@@ -73,7 +72,6 @@ class UserProfile(models.Model):
 
 @receiver(post_save, sender=User)
 def createprofile(sender, instance, created, **kwargs):
-    print("///////", created)
     if instance.is_band:
         BandProfile.objects.get_or_create(user=instance)
     else:
@@ -82,7 +80,6 @@ def createprofile(sender, instance, created, **kwargs):
 
 @receiver(post_save, sender=User)
 def saveprofile(sender, instance, **kwargs):
-    print('Saved')
     if instance.is_band:
         instance.bandprofile.save()
     else:
@@ -98,7 +95,10 @@ class Phone(models.Model):
         return str(self.mobile)
 
 
+class Email(models.Model):
+    email = models.CharField(max_length=200, default="example@gmail.com")
+    otp = models.CharField(max_length=6, default="100001")
 
-
-
+    def __str__(self):
+        return str(self.email)
 

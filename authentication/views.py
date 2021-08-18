@@ -2,6 +2,7 @@ from decouple import config
 from django.contrib.auth.hashers import make_password
 from django.core.exceptions import ObjectDoesNotExist
 from django.shortcuts import render
+from django.core.mail import send_mail
 
 # Create your views here.
 from rest_framework.decorators import api_view, permission_classes, parser_classes
@@ -189,6 +190,20 @@ def get_otp(phone):
     return mobile
 
 
+def get_otp_email(email):
+    try:
+        email = Email.objects.get(email=email)
+    except ObjectDoesNotExist:
+        Email.objects.create(
+            email=email,
+        )
+        email = Email.objects.get(email=email)
+    email.otp = str(random.randint(100000, 999999))
+    email.save()
+
+    return email
+
+
 def verify_otp(phone, otp):
     response = {
         'is_verified': False
@@ -200,6 +215,25 @@ def verify_otp(phone, otp):
         return response, 404
 
     if otp == mobile.otp:
+        response['message'] = "You are authorised"
+        response['is_verified'] = True
+        return response, 200
+
+    response['message'] = "OTP is wrong"
+    return response, 400
+
+
+def verify_otp_email(email, otp):
+    response = {
+        'is_verified': False
+    }
+    try:
+        email = Email.objects.get(email=email)
+    except ObjectDoesNotExist:
+        response['message'] = "User does not exist"
+        return response, 404
+
+    if otp == email.otp:
         response['message'] = "You are authorised"
         response['is_verified'] = True
         return response, 200
@@ -251,6 +285,40 @@ class activate_user(APIView):
         return Response(response, status=status)
 
 
+class activate_user_by_email(APIView):
+    @staticmethod
+    def get(request, email):
+        email_obj = get_otp_email(email)
+        verify_msg = 'Your OTP is ' + email_obj.otp + ' to verify WAYO.LIVE account.'
+        subject = 'Verify WAYO.LIVE account'
+        try:
+            send_mail(subject, verify_msg, email, [email], fail_silently=False)
+            response = {
+                "message": "Verification code sent successfully",
+                "mobile": email_obj.email
+            }
+            return Response(response, status=200)
+
+        except Exception as e:
+            print(e)
+            response = {
+                "message": "Verification code was not sent",
+                "email": email_obj.email
+            }
+            return Response(response, status=400)
+
+    @staticmethod
+    def post(request, email):
+        response, status = verify_otp_email(email, request.data["otp"])
+        if response['is_verified']:
+            user = User.objects.get(email=email)
+            print(user)
+            user.is_verified = True
+            user.save()
+            response['message'] = "You are verified"
+        return Response(response, status=status)
+
+
 @api_view(['POST'])
 # @permission_classes([IsAuthenticated])
 @parser_classes([MultiPartParser, FormParser])
@@ -288,3 +356,5 @@ def users_registration(request):
         "count_of_all_users": len(excel_data),
         "not_saved_lines": not_saved
     }, status=200)
+
+

@@ -57,5 +57,5 @@ urlpatterns = [
     path('collectdata/',views.audiencedatacollect),
 
 
-
+    # path('test/',views.testevent),
 ]
