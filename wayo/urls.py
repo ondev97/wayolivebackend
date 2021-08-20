@@ -23,7 +23,7 @@ urlpatterns = [
     path('auth/',include('authentication.urls')),
     path('show/',include('show.urls')),
     path('auth/dj-rest-auth/',include('dj_rest_auth.urls')),
-    path('auth/dj-rest-auth/password/reset/confirm',PasswordResetConfirmView.as_view(),name='rest_password_reset_confirm'),
+    path('auth/dj-rest-auth/password/reset/confirm',PasswordResetConfirmView.as_view(),name='password_reset_confirm'),
     path('auth/dj-rest-auth/registration/', include('dj_rest_auth.registration.urls')),
     path('auth/all/',include('allauth.urls')),
 ]
