@@ -34,6 +34,12 @@ def listevent(request,pk):
     return Response(serializer.data)
 
 @api_view(['GET'])
+def listallevents(request):
+    events = Event.objects.all()
+    serializer = EventSerializer(events,many=True)
+    return Response(serializer.data)
+
+@api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def listeventinband(request,pk):
     band = BandProfile.objects.get(id=pk)
