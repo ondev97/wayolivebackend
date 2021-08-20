@@ -160,7 +160,7 @@ def ticketgenerator(request, count, pk):
 @permission_classes([IsAuthenticated])
 def availabletickets(request, pk):
     event = Event.objects.get(id=pk)
-    ticketList = Ticket.objects.filter(isValid=True, isIssued=False, event=event )
+    ticketList = Ticket.objects.filter(isValid=True, isIssued=False, event=event)
     serializer = TicketSerializer(ticketList, many=True)
     return Response(serializer.data)
 
@@ -419,12 +419,11 @@ def latestevent(request):
 
 
 # @api_view(['GET'])
-# @permission_classes([IsAuthenticated])
 # def testevent(request):
 #     today = date.today() - datetime.timedelta(1)
 #     now = datetime.datetime.now()
 #     time = str(now)[10:16]
-#     events = Event.objects.filter(event_date__gt=today)
+#     events = Event.objects.filter(event_date__gt=today, event_end='')
 #     print(now, time, today, events)
 #     event_serialiser = EventSerializer(events, many=True)
 #     return Response(event_serialiser.data, status=200)

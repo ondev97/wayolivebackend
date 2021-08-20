@@ -146,6 +146,7 @@ def TestLoginView(request):
         response['completed_user'] = True if user.first_name and user.last_name and user.email and user.phone_no else False
         response['is_verified'] = True if user.is_band else user.is_verified
         response['phone_no'] = user.phone_no
+        response['email'] = user.email
         token = Token.objects.filter(user=user).first()
         if token:
             response['status'] = False if user.is_band else True
@@ -245,13 +246,13 @@ def verify_otp_email(email, otp):
 class activate_user(APIView):
     @staticmethod
     def get(request, phone):
-        mobile = get_otp(phone)
+        mobile = get_otp(phone[1:] if phone[0] == '+' else phone)
         verify_msg = 'Your OTP is ' + mobile.otp + ' to verify WAYO.LIVE account.'
         params = {
-            'id' : config('TEXTIT_ID'),
-            'pw' : config('TEXTIT_PW'),
-            'to' : mobile.mobile,
-            'text' : verify_msg,
+            'id': config('TEXTIT_ID'),
+            'pw': config('TEXTIT_PW'),
+            'to': mobile.mobile,
+            'text': verify_msg,
         }
         url = 'https://www.textit.biz/sendmsg/?' + urllib.parse.urlencode(params)
         try:
@@ -260,7 +261,7 @@ class activate_user(APIView):
             if response.text.split(':')[0] == 'OK':
                 return Response({
                     "message": "Verification code sent successfully",
-                    "mobile": mobile.mobile,
+                    "mobile": mobile.mobile[1:] if mobile.mobile[0] == '+' else mobile.mobile,
                     "res": response.text
                 }, status=200)
             else:
@@ -275,9 +276,9 @@ class activate_user(APIView):
 
     @staticmethod
     def post(request, phone):
-        response, status = verify_otp(phone, request.data["otp"])
+        response, status = verify_otp(phone[1:] if phone[0] == '+' else phone, request.data["otp"])
         if response['is_verified']:
-            user = User.objects.get(phone_no=phone)
+            user = User.objects.get(phone_no=phone[1:] if phone[0] == '+' else phone)
             print(user)
             user.is_verified = True
             user.save()

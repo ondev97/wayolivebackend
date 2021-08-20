@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import User, BandProfile, UserProfile, Phone
+from .models import User, BandProfile, UserProfile, Phone, Email
 
 
 # Register your models here.
@@ -24,4 +24,5 @@ admin.site.register(User,CustomUserAdmin)
 admin.site.register(BandProfile)
 admin.site.register(UserProfile)
 admin.site.register(Phone)
+admin.site.register(Email)
 

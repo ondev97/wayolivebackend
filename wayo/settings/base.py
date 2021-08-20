@@ -164,9 +164,9 @@ USE_TZ = True
 SMS_BACKEND = 'sms.backends.console.SmsBackend'
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_USE_TLS = True
-EMAIL_PORT = 587
-EMAIL_HOST_USER = 'sandeepkushajvithanage@gmail.com'
-DEFAULT_FROM_EMAIL = 'sandeepkushajvithanage@gmail.com'
-EMAIL_HOST_PASSWORD = 'nooneknowsme'
+EMAIL_HOST = config('EMAIL_HOST')
+EMAIL_USE_TLS = config('EMAIL_USE_TLS')
+EMAIL_PORT = config('EMAIL_PORT')
+EMAIL_HOST_USER = config('EMAIL')
+DEFAULT_FROM_EMAIL = config('EMAIL')
+EMAIL_HOST_PASSWORD = config('EMAIL_PASSWORD')
