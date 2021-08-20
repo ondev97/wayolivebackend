@@ -30,8 +30,12 @@ def createevent(request,pk):
 def listevent(request,pk):
     event_mode = EventMode.objects.get(id=pk)
     events = Event.objects.filter(event_mode__id=event_mode.id)
-    serializer = EventSerializer(events, many=True)
-    return Response(serializer.data)
+    paginator = PageNumberPagination()
+    paginator.page_size = 5
+    result_page = paginator.paginate_queryset(events, request)
+    serializer = EventSerializer(result_page, many=True)
+    return paginator.get_paginated_response(serializer.data)
+
 
 @api_view(['GET'])
 def listallevents(request):
