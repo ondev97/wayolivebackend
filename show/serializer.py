@@ -21,6 +21,12 @@ class EventSerializer(serializers.ModelSerializer):
         model = Event
         fields = '__all__'
 
+class AllEventSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Event
+        fields = '__all__'
+
+        depth = 1
 
 class EventViewSerializer(serializers.ModelSerializer):
     class Meta:

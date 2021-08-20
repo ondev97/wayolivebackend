@@ -40,7 +40,7 @@ def listallevents(request):
     paginator = PageNumberPagination()
     paginator.page_size = 100
     result_page = paginator.paginate_queryset(events, request)
-    serializer = EventSerializer(result_page, many=True)
+    serializer = AllEventSerializer(result_page, many=True)
     return paginator.get_paginated_response(serializer.data)
 
 
