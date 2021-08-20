@@ -42,7 +42,9 @@ def listallevents(request):
     result_page = paginator.paginate_queryset(events, request)
     serializer = AllEventSerializer(result_page, many=True)
     i = 0
-    for i in range(len(serializer.data.results))
+    for d in serializer.data:
+        serializer.data[i]['band']['user'].pop('password')
+        i += 1
     return paginator.get_paginated_response(serializer.data)
 
 
