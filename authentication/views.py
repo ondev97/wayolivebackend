@@ -14,6 +14,7 @@ from rest_framework.parsers import MultiPartParser, FormParser, FileUploadParser
 from rest_framework.views import APIView
 from rest_framework.authtoken.models import Token
 from show.models import Enrollment
+from wayo.settings.base import EMAIL_HOST_USER
 from .serializer import *
 
 from .models import *
@@ -293,7 +294,7 @@ class activate_user_by_email(APIView):
         verify_msg = 'Your OTP is ' + email_obj.otp + ' to verify WAYO.LIVE account.'
         subject = 'Verify WAYO.LIVE account'
         try:
-            send_mail(subject, verify_msg, email, [email], fail_silently=False)
+            send_mail(subject, verify_msg, EMAIL_HOST_USER, [email], fail_silently=False)
             response = {
                 "message": "Verification code sent successfully",
                 "mobile": email_obj.email
@@ -301,7 +302,7 @@ class activate_user_by_email(APIView):
             return Response(response, status=200)
 
         except Exception as e:
-            print(e)
+            print('Error : ', e)
             response = {
                 "message": "Verification code was not sent",
                 "email": email_obj.email
