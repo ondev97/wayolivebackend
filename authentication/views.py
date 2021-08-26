@@ -244,6 +244,112 @@ def verify_otp_email(email, otp):
     return response, 400
 
 
+class reset_session(APIView):
+    @staticmethod
+    def get(request, username):
+        user = User.objects.filter(username=username).first()
+        if user.phone_no and user.email:
+            if user.phone_no.startswith('94') or user.phone_no.startswith('+94'):
+                mobile = get_otp(user.phone_no[1:] if user.phone_no[0] == '+' else user.phone_no)
+                verify_msg = 'Your OTP is ' + mobile.otp + ' to reset login session of your WAYO.LIVE account.'
+                params = {
+                    'id': config('TEXTIT_ID'),
+                    'pw': config('TEXTIT_PW'),
+                    'to': mobile.mobile,
+                    'text': verify_msg,
+                }
+                url = 'https://www.textit.biz/sendmsg/?' + urllib.parse.urlencode(params)
+                try:
+                    response = requests.get(url)
+                    # text = "OK:Cr=0.71,Route=CSID-WAYO,MessageID=7171-1627019618,Recipient=754745340,BX=23-152\n"
+                    if response.text.split(':')[0] == 'OK':
+                        return Response({
+                            "message": "Verification code sent successfully",
+                            "mobile": mobile.mobile[1:] if mobile.mobile[0] == '+' else mobile.mobile,
+                            "res": response.text
+                        }, status=200)
+                    else:
+                        return Response({
+                            "message": "Verification code was not sent",
+                            "mobile": mobile.mobile[1:] if mobile.mobile[0] == '+' else mobile.mobile,
+                            "res": response.text
+                        }, status=400)
+                except:
+                    print("An exception occurred")
+                    return Response({"message": "Something is wrong", "mobile": mobile.mobile}, status=503)
+            else:
+                email_obj = get_otp_email(user.email)
+                verify_msg = 'Your OTP is ' + email_obj.otp + ' to reset login session of your WAYO.LIVE account.'
+                subject = 'Verify WAYO.LIVE account'
+                try:
+                    send_mail(subject, verify_msg, EMAIL_HOST_USER, [user.email], fail_silently=False)
+                    response = {
+                        "message": "Verification code sent successfully",
+                        "mobile": email_obj.email
+                    }
+                    return Response(response, status=200)
+
+                except Exception as e:
+                    print('Error : ', e)
+                    response = {
+                        "message": "Verification code was not sent",
+                        "email": email_obj.email
+                    }
+                    return Response(response, status=400)
+        else:
+            return Response({
+                "msg": "User has not set a phone number and an email"
+            }, status=400)
+
+    @staticmethod
+    def post(request, username):
+        user = User.objects.filter(username=username).first()
+        if user:
+            if user.phone_no and user.email:
+                if user.phone_no.startswith('94'):
+                    mobile = Phone.objects.get(mobile=user.phone_no)
+                    if mobile.otp == request.data['otp']:
+                        user_token = Token.objects.filter(user=user)
+                        if user_token:
+                            user_token.delete()
+                            return Response({
+                                "msg": "Login session has been reset successfully"
+                            }, status=200)
+                        else:
+                            return Response({
+                                "msg": "Login session with this username not found"
+                            }, status=404)
+                    else:
+                        return Response({
+                            "msg": "OTP is wrong"
+                        }, status=400)
+                else:
+                    email_obj = Email.objects.get(email=user.email)
+                    if email_obj.otp == request.data['otp']:
+                        user_token = Token.objects.filter(user=user)
+                        if user_token:
+                            user_token.delete()
+                            return Response({
+                                "msg": "Login session has been reset successfully"
+                            }, status=200)
+                        else:
+                            return Response({
+                                "msg": "Login session with this username not found"
+                            }, status=404)
+                    else:
+                        return Response({
+                            "msg": "OTP is wrong"
+                        }, status=400)
+            else:
+                return Response({
+                    "msg": "User has not set a phone number and an email"
+                }, status=400)
+        else:
+            return Response({
+                "msg": "Invalid username"
+            }, status=401)
+
+
 class activate_user(APIView):
     @staticmethod
     def get(request, phone):
