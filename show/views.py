@@ -425,7 +425,6 @@ def audiencedatacollect(request):
 def latestevent(request):
     today = date.today()
     event = Event.objects.filter(event_date__gt=today, is_freeze=False).order_by('event_date', 'event_start').first()
-    print(today, event.event_date)
     if event:
         serializer = EventSerializer(event)
         return Response(serializer.data)
