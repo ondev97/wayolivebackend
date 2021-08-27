@@ -36,7 +36,8 @@ def listevent(request,pk):
 
 @api_view(['GET'])
 def listallevents(request):
-    events = Event.objects.all()
+    today = date.today()
+    events = Event.objects.filter(event_date__gt=today, is_freeze=False)
     paginator = PageNumberPagination()
     paginator.page_size = 5
     result_page = paginator.paginate_queryset(events, request)
@@ -429,7 +430,9 @@ def latestevent(request):
         serializer = EventSerializer(event)
         return Response(serializer.data)
     else:
-        return Response('no data found', status=404)
+        return Response({
+            "message": 'No data found'
+        }, status=404)
 
 
 # @api_view(['GET'])
