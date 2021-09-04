@@ -3,7 +3,7 @@ from . import views
 
 urlpatterns = [
     path('register/',views.createuser.as_view()),
-    path('updateuser/<int:pk>/',views.updateuser.as_view()),
+    path('updateuser/<int:pk>/',views.updateuserview),
     path('updateuserprofile/<int:pk>/',views.updateuserprofile),
     path('updatebandprofile/<int:pk>/',views.updatebandprofileview),
     path('listbands/',views.listbandprofiles),
@@ -16,5 +16,6 @@ urlpatterns = [
     path('activate_user/<str:phone>/', views.activate_user.as_view()),
     path('activate_user_by_email/<str:email>/', views.activate_user_by_email.as_view()),
     path('resetsession/<str:username>/', views.reset_session.as_view()),
+    path('getotp/<str:username>/', views.get_otp_code),
     path('reg_users/',views.users_registration),
 ]

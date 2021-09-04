@@ -44,12 +44,39 @@ class updateuser(RetrieveUpdateAPIView):
         user = User.objects.get(id=self.kwargs['pk'])
         if user.check_password(self.request.data['password']):
             instance = serializer.save()
-            print(instance.password)
             instance.set_password(instance.password)
             instance.save()
         else:
-            print("not matched")
             raise APIException("Password's not matching")
+
+
+@api_view(['POST'])
+def updateuserview(request, pk):
+    user = User.objects.get(id=pk)
+    password = None
+    phone_no = None
+    try:
+        password = request.data['password']
+        phone_no = request.data['phone_no']
+    except Exception as e:
+        print(e)
+
+    if user and password and user.check_password(password):
+        serializer = UserSerializerAPI(user, data=request.data)
+        if serializer.is_valid():
+            phone_no = (phone_no[1:] if phone_no[0] == '+' else phone_no) if phone_no else None
+            if phone_no and phone_no[0] == '0':
+                return Response({"message": "you should enter phone number with country code (ex: 93, 94)"}, status=400)
+            if len(phone_no) > 10 and len(phone_no) <= 15:
+                serializer.save(phone_no=phone_no, password=make_password(password))
+                return Response(serializer.data)
+            else:
+                return Response({"message": "Invalid phone number"})
+
+        else:
+            return Response(serializer.errors)
+    else:
+        return Response({"message": "Invalid credentials"}, status=401)
 
 
 @api_view(['POST'])
@@ -244,6 +271,63 @@ def verify_otp_email(email, otp):
     return response, 400
 
 
+@api_view(['GET'])
+def get_otp_code(request, username):
+    user = User.objects.filter(username=username).first()
+    if user.phone_no and user.email:
+        if user.phone_no.startswith('94') or user.phone_no.startswith('+94'):
+            mobile = get_otp(user.phone_no[1:] if user.phone_no[0] == '+' else user.phone_no)
+            verify_msg = 'Your OTP is ' + mobile.otp + ' to reset login session of your WAYO.LIVE account.'
+            params = {
+                'id': config('TEXTIT_ID'),
+                'pw': config('TEXTIT_PW'),
+                'to': mobile.mobile,
+                'text': verify_msg,
+            }
+            url = 'https://www.textit.biz/sendmsg/?' + urllib.parse.urlencode(params)
+            try:
+                response = requests.get(url)
+                # text = "OK:Cr=0.71,Route=CSID-WAYO,MessageID=7171-1627019618,Recipient=754745340,BX=23-152\n"
+                if response.text.split(':')[0] == 'OK':
+                    return Response({
+                        "message": "Verification code sent successfully",
+                        "mobile": mobile.mobile[1:] if mobile.mobile[0] == '+' else mobile.mobile,
+                        "res": response.text
+                    }, status=200)
+                else:
+                    return Response({
+                        "message": "Verification code was not sent",
+                        "mobile": mobile.mobile[1:] if mobile.mobile[0] == '+' else mobile.mobile,
+                        "res": response.text
+                    }, status=400)
+            except:
+                print("An exception occurred")
+                return Response({"message": "Something is wrong", "mobile": mobile.mobile}, status=503)
+        else:
+            email_obj = get_otp_email(user.email)
+            verify_msg = 'Your OTP is ' + email_obj.otp + ' to reset login session of your WAYO.LIVE account.'
+            subject = 'Verify WAYO.LIVE account'
+            try:
+                send_mail(subject, verify_msg, EMAIL_HOST_USER, [user.email], fail_silently=False)
+                response = {
+                    "message": "Verification code sent successfully",
+                    "mobile": email_obj.email
+                }
+                return Response(response, status=200)
+
+            except Exception as e:
+                print('Error : ', e)
+                response = {
+                    "message": "Verification code was not sent",
+                    "email": email_obj.email
+                }
+                return Response(response, status=400)
+    else:
+        return Response({
+            "msg": "User has not set a phone number and an email"
+        }, status=400)
+
+
 class reset_session(APIView):
     @staticmethod
     def get(request, username):
@@ -312,8 +396,12 @@ class reset_session(APIView):
                         user_token = Token.objects.filter(user=user)
                         if user_token:
                             user_token.delete()
+                            token = Token.objects.create(user=user)
+                            serializer = UserSerializer(user)
                             return Response({
-                                "msg": "Login session has been reset successfully"
+                                "msg": "Login session has been reset successfully",
+                                "token": token.key,
+                                "user": serializer.data
                             }, status=200)
                         else:
                             return Response({
@@ -329,8 +417,12 @@ class reset_session(APIView):
                         user_token = Token.objects.filter(user=user)
                         if user_token:
                             user_token.delete()
+                            token = Token.objects.create(user=user)
+                            serializer = UserSerializer(user)
                             return Response({
-                                "msg": "Login session has been reset successfully"
+                                "msg": "Login session has been reset successfully",
+                                "token": token.key,
+                                "user": serializer.data
                             }, status=200)
                         else:
                             return Response({
@@ -386,10 +478,13 @@ class activate_user(APIView):
         response, status = verify_otp(phone[1:] if phone[0] == '+' else phone, request.data["otp"])
         if response['is_verified']:
             user = User.objects.get(phone_no=phone[1:] if phone[0] == '+' else phone)
-            print(user)
+            token = Token.objects.create(user=user)
             user.is_verified = True
             user.save()
+            serializer = UserSerializer(user)
             response['message'] = "You are verified"
+            response['token'] = token.key
+            response['user'] = serializer.data
         return Response(response, status=status)
 
 
@@ -420,10 +515,14 @@ class activate_user_by_email(APIView):
         response, status = verify_otp_email(email, request.data["otp"])
         if response['is_verified']:
             user = User.objects.get(email=email)
-            print(user)
+            token = Token.objects.create(user=user)
+            print('Token', token)
             user.is_verified = True
             user.save()
+            serializer = UserSerializer(user)
             response['message'] = "You are verified"
+            response['token'] = token.key
+            response['user'] = serializer.data
         return Response(response, status=status)
 
 
