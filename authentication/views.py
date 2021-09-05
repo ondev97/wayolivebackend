@@ -80,6 +80,55 @@ def updateuserview(request, pk):
 
 
 @api_view(['POST'])
+def updateuserviewwithOTP(request, pk):
+    user = User.objects.get(id=pk)
+    password = None
+    phone_no = None
+    is_local = None
+    otp = None
+    try:
+        password = request.data['password']
+        phone_no = request.data['phone_no']
+        otp = request.data['otp']
+        is_local = phone_no.startswith('94') or phone_no.startswith('+94')
+    except Exception as e:
+        print(e)
+
+    pre_otp = None
+    if is_local:
+        phone = Phone.objects.get(mobile=user.phone_no)
+        if phone:
+            pre_otp = phone.otp
+    else:
+        email = Email.objects.get(email=user.email)
+        if email:
+            pre_otp = email.otp
+
+
+    if user and password and user.check_password(password):
+        if(otp and pre_otp and otp == pre_otp):
+            serializer = UserSerializerAPI(user, data=request.data)
+            if serializer.is_valid():
+                phone_no = (phone_no[1:] if phone_no[0] == '+' else phone_no) if phone_no else None
+                if phone_no and phone_no[0] == '0':
+                    return Response({"message": "you should enter phone number with country code (ex: 93, 94)"}, status=400)
+                if len(phone_no) > 10 and len(phone_no) <= 15:
+                    serializer.save(phone_no=phone_no, password=make_password(password))
+                    return Response(serializer.data)
+                else:
+                    return Response({"message": "Invalid phone number"})
+
+            else:
+                return Response(serializer.errors)
+        else:
+            return Response({
+                "message": "Invalid OTP"
+            }, status=400)
+    else:
+        return Response({"message": "Invalid credentials"}, status=401)
+
+
+@api_view(['POST'])
 # @permission_classes([IsAuthenticated])
 @parser_classes([MultiPartParser, FormParser])
 def updateuserprofile(request, pk):
