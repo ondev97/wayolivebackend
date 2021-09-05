@@ -397,11 +397,10 @@ class reset_session(APIView):
                         if user_token:
                             user_token.delete()
                             token = Token.objects.create(user=user)
-                            serializer = UserSerializer(user)
+                            serializer = OTPCustomTokenSerializer(token)
                             return Response({
                                 "msg": "Login session has been reset successfully",
-                                "token": token.key,
-                                "user": serializer.data
+                                "token": serializer.data
                             }, status=200)
                         else:
                             return Response({
@@ -418,11 +417,10 @@ class reset_session(APIView):
                         if user_token:
                             user_token.delete()
                             token = Token.objects.create(user=user)
-                            serializer = UserSerializer(user)
+                            serializer = OTPCustomTokenSerializer(token)
                             return Response({
                                 "msg": "Login session has been reset successfully",
-                                "token": token.key,
-                                "user": serializer.data
+                                "token": serializer.data
                             }, status=200)
                         else:
                             return Response({
@@ -481,10 +479,9 @@ class activate_user(APIView):
             token = Token.objects.create(user=user)
             user.is_verified = True
             user.save()
-            serializer = UserSerializer(user)
+            serializer = OTPCustomTokenSerializer(token)
             response['message'] = "You are verified"
-            response['token'] = token.key
-            response['user'] = serializer.data
+            response['token'] = serializer.data
         return Response(response, status=status)
 
 
@@ -519,10 +516,9 @@ class activate_user_by_email(APIView):
             print('Token', token)
             user.is_verified = True
             user.save()
-            serializer = UserSerializer(user)
+            serializer = OTPCustomTokenSerializer(token)
             response['message'] = "You are verified"
-            response['token'] = token.key
-            response['user'] = serializer.data
+            response['token'] = serializer.data
         return Response(response, status=status)
 
 
