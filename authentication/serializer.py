@@ -54,7 +54,7 @@ class UserSerializer(serializers.ModelSerializer):
 class OTPUserTokenSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('id', 'email', 'is_band')
+        fields = ('id', 'email', 'is_band', 'is_verified')
 
 
 class OTPCustomTokenSerializer(TokenSerializer):
