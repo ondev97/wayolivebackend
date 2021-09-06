@@ -124,7 +124,7 @@ def updateuserviewwithOTP(request, pk):
                 "message": "Invalid OTP"
             }, status=400)
     else:
-        return Response({"message": "Invalid credentials"}, status=401)
+        return Response({"message": "Invalid password"}, status=401)
 
 
 @api_view(['POST'])
