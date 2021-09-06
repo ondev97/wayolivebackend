@@ -110,7 +110,7 @@ def updateuserviewwithOTP(request, pk):
             if serializer.is_valid():
                 phone_no = (phone_no[1:] if phone_no[0] == '+' else phone_no) if phone_no else None
                 if phone_no and phone_no[0] == '0':
-                    return Response({"message": "you should enter phone number with country code (ex: 93, 94)"}, status=400)
+                    return Response({"phone": "you should enter phone number with country code (ex: 93, 94)"}, status=400)
                 if len(phone_no) > 10 and len(phone_no) <= 15:
                     serializer.save(phone_no=phone_no, password=make_password(password))
                     return Response(serializer.data)
