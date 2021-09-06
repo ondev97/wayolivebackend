@@ -134,7 +134,22 @@ def updateuserviewwithOTP(request, pk):
 def updateuserprofile(request, pk):
     u = User.objects.get(id=pk)
     user = UserProfile.objects.get(user=u)
-    if u.check_password(request.data['password']):
+    if u and user and u.check_password(request.data['password']):
+        is_local = u.phone_no.startswith('94') or u.phone_no.startswith('+94')
+        otp = None
+        if is_local:
+            phone = Phone.objects.filter(mobile=u.phone_no).first()
+            if phone:
+                otp = phone.otp
+        else:
+            email = Email.objects.filter(email=u.email).first()
+            if email:
+                otp = email.otp
+        if otp != request.data['otp']:
+            return Response({
+                "message": "Invalid OTP"
+            }, status=400)
+
         serializer = UserProfileSerializer(instance=user, data=request.data)
         if serializer.is_valid():
             serializer.save()
@@ -150,12 +165,34 @@ def updateuserprofile(request, pk):
 @permission_classes([IsAuthenticated])
 @parser_classes([MultiPartParser, FormParser])
 def updatebandprofileview(request, pk):
-    user = BandProfile.objects.get(user_id=pk)
-    serializer = BandProfileSerializer(instance=user, data=request.data)
-    if serializer.is_valid():
-        serializer.save()
-        serializer.data['user'].pop('password')
-    return Response(serializer.data)
+    u = User.objects.get(id=pk)
+    user = BandProfile.objects.get(user=u)
+
+    if u and user and u.check_password(request.data['password']):
+        is_local = u.phone_no.startswith('94') or u.phone_no.startswith('+94')
+        otp = None
+        if is_local:
+            phone = Phone.objects.filter(mobile=u.phone_no).first()
+            if phone:
+                otp = phone.otp
+        else:
+            email = Email.objects.filter(email=u.email).first()
+            if email:
+                otp = email.otp
+        if otp != request.data['otp']:
+            return Response({
+                "message": "Invalid OTP"
+            }, status=400)
+
+        serializer = BandProfileSerializer(instance=user, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            serializer.data['user'].pop('password')
+            return Response(serializer.data)
+        else:
+            return Response(serializer.errors)
+    else:
+        return Response({'invalid credentials'}, status=401)
 
 
 @api_view(['GET'])
@@ -324,7 +361,7 @@ def verify_otp_email(email, otp):
 @api_view(['GET'])
 def get_otp_code(request, username):
     user = User.objects.filter(username=username).first()
-    if user.phone_no and user.email:
+    if user and user.phone_no and user.email:
         if user.phone_no.startswith('94') or user.phone_no.startswith('+94'):
             mobile = get_otp(user.phone_no[1:] if user.phone_no[0] == '+' else user.phone_no)
             verify_msg = 'Your OTP is ' + mobile.otp + ' to reset login session of your WAYO.LIVE account.'
@@ -374,7 +411,7 @@ def get_otp_code(request, username):
                 return Response(response, status=400)
     else:
         return Response({
-            "msg": "User has not set a phone number and an email"
+            "msg": "User does not exist or has not set a phone number and an email"
         }, status=400)
 
 
