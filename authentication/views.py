@@ -104,7 +104,6 @@ def updateuserviewwithOTP(request, pk):
         if email:
             pre_otp = email.otp
 
-
     if user and password and user.check_password(password):
         if(otp and pre_otp and otp == pre_otp):
             serializer = UserSerializerAPI(user, data=request.data)
@@ -129,36 +128,18 @@ def updateuserviewwithOTP(request, pk):
 
 
 @api_view(['POST'])
-# @permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated])
 @parser_classes([MultiPartParser, FormParser])
 def updateuserprofile(request, pk):
     u = User.objects.get(id=pk)
     user = UserProfile.objects.get(user=u)
-    if u and user and u.check_password(request.data['password']):
-        is_local = u.phone_no.startswith('94') or u.phone_no.startswith('+94')
-        otp = None
-        if is_local:
-            phone = Phone.objects.filter(mobile=u.phone_no).first()
-            if phone:
-                otp = phone.otp
-        else:
-            email = Email.objects.filter(email=u.email).first()
-            if email:
-                otp = email.otp
-        if otp != request.data['otp']:
-            return Response({
-                "message": "Invalid OTP"
-            }, status=400)
-
-        serializer = UserProfileSerializer(instance=user, data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            serializer.data['user'].pop('password')
-            return Response(serializer.data)
-        else:
-            return Response(serializer.errors)
+    serializer = UserProfileSerializer(instance=user, data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        serializer.data['user'].pop('password')
+        return Response(serializer.data)
     else:
-        return Response({'invalid credentials'}, status=401)
+        return Response(serializer.errors)
 
 
 @api_view(['POST'])
@@ -167,32 +148,14 @@ def updateuserprofile(request, pk):
 def updatebandprofileview(request, pk):
     u = User.objects.get(id=pk)
     user = BandProfile.objects.get(user=u)
-
-    if u and user and u.check_password(request.data['password']):
-        is_local = u.phone_no.startswith('94') or u.phone_no.startswith('+94')
-        otp = None
-        if is_local:
-            phone = Phone.objects.filter(mobile=u.phone_no).first()
-            if phone:
-                otp = phone.otp
-        else:
-            email = Email.objects.filter(email=u.email).first()
-            if email:
-                otp = email.otp
-        if otp != request.data['otp']:
-            return Response({
-                "message": "Invalid OTP"
-            }, status=400)
-
-        serializer = BandProfileSerializer(instance=user, data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            serializer.data['user'].pop('password')
-            return Response(serializer.data)
-        else:
-            return Response(serializer.errors)
+    serializer = BandProfileSerializer(instance=user, data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        serializer.data['user'].pop('password')
+        return Response(serializer.data)
     else:
-        return Response({'invalid credentials'}, status=401)
+        return Response(serializer.errors)
+
 
 
 @api_view(['GET'])
