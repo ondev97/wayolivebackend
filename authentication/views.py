@@ -90,7 +90,7 @@ def updateuserviewwithOTP(request, pk):
         password = request.data['password']
         phone_no = request.data['phone_no']
         otp = request.data['otp']
-        is_local = phone_no.startswith('94') or phone_no.startswith('+94')
+        is_local = user.phone_no.startswith('94') or user.phone_no.startswith('+94')
     except Exception as e:
         print(e)
 
