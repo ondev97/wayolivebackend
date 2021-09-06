@@ -76,7 +76,7 @@ def updateuserview(request, pk):
         else:
             return Response(serializer.errors, status=400)
     else:
-        return Response({"message": "Invalid credentials"}, status=401)
+        return Response({"message": "Invalid password"}, status=401)
 
 
 @api_view(['POST'])
