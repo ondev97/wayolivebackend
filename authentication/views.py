@@ -132,8 +132,9 @@ def updateuserviewwithOTP(request, pk):
 # @permission_classes([IsAuthenticated])
 @parser_classes([MultiPartParser, FormParser])
 def updateuserprofile(request, pk):
-    user = UserProfile.objects.get(user_id=pk)
-    if user.check_password(request.data['password']):
+    u = User.objects.get(id=pk)
+    user = UserProfile.objects.get(user=u)
+    if u.check_password(request.data['password']):
         serializer = UserProfileSerializer(instance=user, data=request.data)
         if serializer.is_valid():
             serializer.save()
