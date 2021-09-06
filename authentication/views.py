@@ -71,10 +71,10 @@ def updateuserview(request, pk):
                 serializer.save(phone_no=phone_no, password=make_password(password))
                 return Response(serializer.data)
             else:
-                return Response({"message": "Invalid phone number"})
+                return Response({"message": "Invalid phone number"}, status=400)
 
         else:
-            return Response(serializer.errors)
+            return Response(serializer.errors, status=400)
     else:
         return Response({"message": "Invalid credentials"}, status=401)
 
