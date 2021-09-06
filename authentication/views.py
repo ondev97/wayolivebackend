@@ -71,7 +71,7 @@ def updateuserview(request, pk):
                 serializer.save(phone_no=phone_no, password=make_password(password))
                 return Response(serializer.data)
             else:
-                return Response({"phone_no": "Invalid phone number"}, status=400)
+                return Response({"phone": "Invalid phone number"}, status=400)
 
         else:
             return Response(serializer.errors, status=400)
@@ -115,7 +115,7 @@ def updateuserviewwithOTP(request, pk):
                     serializer.save(phone_no=phone_no, password=make_password(password))
                     return Response(serializer.data)
                 else:
-                    return Response({"phone_no": "Invalid phone number"}, status=400)
+                    return Response({"phone": "Invalid phone number"}, status=400)
 
             else:
                 return Response(serializer.errors, status=400)
