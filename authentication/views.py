@@ -86,21 +86,29 @@ def updateuserviewwithOTP(request, pk):
     phone_no = None
     is_local = None
     otp = None
+    email = None
     try:
         password = request.data['password']
         phone_no = request.data['phone_no']
+        email = request.data['email']
         otp = request.data['otp']
-        is_local = user.phone_no.startswith('94') or user.phone_no.startswith('+94')
+        phone_no = phone_no[1:] if phone_no[0] == '+' else phone_no
+        is_local = phone_no.startswith('94')
     except Exception as e:
         print(e)
 
+    # if not (phone_no and password and email and otp):
+    #     return Response({
+    #         "message": "Email, phone number, password and otp code are required"
+    #     }, status=400)
+
     pre_otp = None
     if is_local:
-        phone = Phone.objects.get(mobile=user.phone_no)
+        phone = Phone.objects.get(mobile=phone_no)
         if phone:
             pre_otp = phone.otp
     else:
-        email = Email.objects.get(email=user.email)
+        email = Email.objects.get(email=email)
         if email:
             pre_otp = email.otp
 
@@ -108,7 +116,6 @@ def updateuserviewwithOTP(request, pk):
         if(otp and pre_otp and otp == pre_otp):
             serializer = UserSerializerAPI(user, data=request.data)
             if serializer.is_valid():
-                phone_no = (phone_no[1:] if phone_no[0] == '+' else phone_no) if phone_no else None
                 if phone_no and phone_no[0] == '0':
                     return Response({"phone": "you should enter phone number with country code (ex: 93, 94)"}, status=400)
                 if len(phone_no) > 10 and len(phone_no) <= 15:
@@ -323,11 +330,39 @@ def verify_otp_email(email, otp):
 
 @api_view(['GET'])
 def get_otp_code(request, username):
+
     user = User.objects.filter(username=username).first()
-    if user and user.phone_no and user.email:
-        if user.phone_no.startswith('94') or user.phone_no.startswith('+94'):
-            mobile = get_otp(user.phone_no[1:] if user.phone_no[0] == '+' else user.phone_no)
-            verify_msg = 'Your OTP is ' + mobile.otp + ' to reset login session of your WAYO.LIVE account.'
+    phone_no = None
+    email = None
+
+    try:
+        phone_no = request.data['phone_no']
+        email = request.data['email']
+    except Exception as e:
+        print(e)
+
+    if not (phone_no and email):
+        return Response({
+            "message": "You should provide both phone number and email."
+        }, status=400)
+
+    phone_no = phone_no[1:] if phone_no[0] == '+' else phone_no
+
+    if len(phone_no) < 11 or len(phone_no) > 15 or phone_no[0] == '0':
+        return Response({
+            "message": "Invalid phone number"
+        }, status=400)
+
+    if User.objects.filter(email=email).first():
+        return Response({
+            "message": "This email is already taken."
+        }, status=400)
+
+
+    if user:
+        if phone_no.startswith('94'):
+            mobile = get_otp(phone_no)
+            verify_msg = 'Your OTP is ' + mobile.otp + ' to update your account on WAYO.LIVE.'
             params = {
                 'id': config('TEXTIT_ID'),
                 'pw': config('TEXTIT_PW'),
@@ -341,24 +376,24 @@ def get_otp_code(request, username):
                 if response.text.split(':')[0] == 'OK':
                     return Response({
                         "message": "Verification code sent successfully",
-                        "mobile": mobile.mobile[1:] if mobile.mobile[0] == '+' else mobile.mobile,
+                        "mobile": mobile.mobile,
                         "res": response.text
                     }, status=200)
                 else:
                     return Response({
                         "message": "Verification code was not sent",
-                        "mobile": mobile.mobile[1:] if mobile.mobile[0] == '+' else mobile.mobile,
+                        "mobile": mobile.mobile,
                         "res": response.text
                     }, status=400)
             except:
                 print("An exception occurred")
                 return Response({"message": "Something is wrong", "mobile": mobile.mobile}, status=503)
         else:
-            email_obj = get_otp_email(user.email)
-            verify_msg = 'Your OTP is ' + email_obj.otp + ' to reset login session of your WAYO.LIVE account.'
-            subject = 'Verify WAYO.LIVE account'
+            email_obj = get_otp_email(email)
+            verify_msg = 'Your OTP is ' + email_obj.otp + ' to update your account on WAYO.LIVE.'
+            subject = 'Update WAYO.LIVE account'
             try:
-                send_mail(subject, verify_msg, EMAIL_HOST_USER, [user.email], fail_silently=False)
+                send_mail(subject, verify_msg, EMAIL_HOST_USER, [email_obj.email], fail_silently=False)
                 response = {
                     "message": "Verification code sent successfully",
                     "mobile": email_obj.email
