@@ -17,6 +17,6 @@ urlpatterns = [
     path('activate_user/<str:phone>/', views.activate_user.as_view()),
     path('activate_user_by_email/<str:email>/', views.activate_user_by_email.as_view()),
     path('resetsession/<str:username>/', views.reset_session.as_view()),
-    path('getotp/<str:username>/', views.get_otp_code),
+    path('getotp/<str:username>/<str:email>/<str:phone_no>/', views.get_otp_code),
     path('reg_users/',views.users_registration),
 ]

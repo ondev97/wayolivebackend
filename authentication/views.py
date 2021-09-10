@@ -329,17 +329,9 @@ def verify_otp_email(email, otp):
 
 
 @api_view(['GET'])
-def get_otp_code(request, username):
+def get_otp_code(request, username, email, phone_no):
 
     user = User.objects.filter(username=username).first()
-    phone_no = None
-    email = None
-
-    try:
-        phone_no = request.data['phone_no']
-        email = request.data['email']
-    except Exception as e:
-        print(e)
 
     if not (phone_no and email):
         return Response({
