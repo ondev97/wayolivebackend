@@ -333,23 +333,27 @@ def get_otp_code(request, username, email, phone_no):
 
     user = User.objects.filter(username=username).first()
 
-    if not (phone_no and email):
-        return Response({
-            "message": "You should provide both phone number and email."
-        }, status=400)
-
     phone_no = phone_no[1:] if phone_no[0] == '+' else phone_no
 
     if len(phone_no) < 11 or len(phone_no) > 15 or phone_no[0] == '0':
         return Response({
-            "message": "Invalid phone number"
+            "phone": "Invalid phone number"
         }, status=400)
 
-    if User.objects.filter(email=email).first():
+    email_user = User.objects.filter(email=email).first()
+    phone_no_user = User.objects.filter(phone_no=phone_no).first()
+
+    print(phone_no_user)
+
+    if email_user and user != email_user:
         return Response({
-            "message": "This email is already taken."
+            "email": "This email is already taken."
         }, status=400)
 
+    if phone_no_user and user != phone_no_user:
+        return Response({
+            "phone": "This phone number is already taken."
+        }, status=400)
 
     if user:
         if phone_no.startswith('94'):
@@ -377,8 +381,8 @@ def get_otp_code(request, username, email, phone_no):
                         "mobile": mobile.mobile,
                         "res": response.text
                     }, status=400)
-            except:
-                print("An exception occurred")
+            except Exception as e:
+                print("An exception occurred", e)
                 return Response({"message": "Something is wrong", "mobile": mobile.mobile}, status=503)
         else:
             email_obj = get_otp_email(email)
