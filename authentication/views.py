@@ -405,7 +405,7 @@ def get_otp_code(request, username, email, phone_no):
                 return Response(response, status=400)
     else:
         return Response({
-            "msg": "User does not exist or has not set a phone number and an email"
+            "message": "User does not exist or has not set a phone number and an email"
         }, status=400)
 
 
