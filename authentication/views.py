@@ -1,6 +1,7 @@
 from decouple import config
 from django.contrib.auth.hashers import make_password
 from django.core.exceptions import ObjectDoesNotExist
+from django.db.models import Q
 from django.shortcuts import render
 from django.core.mail import send_mail
 
@@ -595,7 +596,7 @@ class activate_user(APIView):
     def post(request, phone):
         response, status = verify_otp(phone[1:] if phone[0] == '+' else phone, request.data["otp"])
         if response['is_verified']:
-            user = User.objects.get(phone_no=phone[1:] if phone[0] == '+' else phone)
+            user = User.objects.get(Q(phone_no=phone[1:] if phone[0] == '+' else '+' + phone) | Q(phone_no=phone))
             token = Token.objects.create(user=user)
             user.is_verified = True
             user.save()
