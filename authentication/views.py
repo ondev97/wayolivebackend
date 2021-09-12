@@ -35,6 +35,42 @@ class createuser(CreateAPIView):
         instance.save()
 
 
+@api_view(['POST'])
+def createuserview(request):
+    phone_no = None
+    email = None
+    try:
+        phone_no = request.data['phone_no']
+        email = request.data['email']
+    except Exception as e:
+        print(e)
+
+    if phone_no and phone_no[0] == '+':
+        phone_no = phone_no[1:]
+
+    if User.objects.filter(phone_no=phone_no).first():
+        return Response({
+            'phone_no': ['user with this phone number already exists.']
+        }, status=400)
+    #
+    if len(phone_no) < 11 or len(phone_no) > 15 or phone_no[0] == '0':
+        return Response({
+            'phone_no': ['invalid phone number.']
+        }, status=400)
+
+    if User.objects.filter(email=email).first():
+        return Response({
+            'email': ['user with this email already exists.']
+        }, status=400)
+
+    user_seializer = UserSerializerAPI(data=request.data)
+    if user_seializer.is_valid():
+        user_seializer.save(phone_no=phone_no, password=make_password(request.data['password']))
+        return Response(user_seializer.data, status=200)
+    else:
+        return Response(user_seializer.errors, status=400)
+
+
 class updateuser(RetrieveUpdateAPIView):
     # permission_classes = (IsAuthenticated,)
     serializer_class = UserSerializerAPI

@@ -2,7 +2,7 @@ from django.urls import path,include
 from . import views
 
 urlpatterns = [
-    path('register/',views.createuser.as_view()),
+    path('register/',views.createuserview),
     path('updateuser/<int:pk>/',views.updateuserview),
     path('updateuserotp/<int:pk>/',views.updateuserviewwithOTP),
     path('updateuserprofile/<int:pk>/',views.updateuserprofile),
