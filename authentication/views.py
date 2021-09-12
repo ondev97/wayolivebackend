@@ -266,7 +266,7 @@ def TestLoginView(request):
         response['username'] = user.username
         response['completed_user'] = True if user.first_name and user.last_name and user.email and user.phone_no else False
         response['is_verified'] = True if user.is_band else user.is_verified
-        response['phone_no'] = user.phone_no
+        response['phone_no'] = user.phone_no[1:] if user.phone_no[0] == '+' else user.phone_no
         response['email'] = user.email
         token = Token.objects.filter(user=user).first()
         if token:
