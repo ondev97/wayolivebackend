@@ -364,7 +364,7 @@ def verify_otp_email(email, otp):
     return response, 400
 
 
-@api_view(['GET'])
+@api_view(['POST'])
 def get_otp_code(request, username, email, phone_no):
 
     user = User.objects.filter(username=username).first()
@@ -379,8 +379,6 @@ def get_otp_code(request, username, email, phone_no):
     email_user = User.objects.filter(email=email).first()
     phone_no_user = User.objects.filter(phone_no=phone_no).first()
 
-    print(phone_no_user)
-
     if email_user and user != email_user:
         return Response({
             "email": "This email is already taken."
@@ -392,6 +390,11 @@ def get_otp_code(request, username, email, phone_no):
         }, status=400)
 
     if user:
+        if not user.check_password(request.data['password']):
+            return Response({
+                'password': 'wrong password'
+            }, status=400)
+
         if phone_no.startswith('94'):
             mobile = get_otp(phone_no)
             verify_msg = 'Your OTP is ' + mobile.otp + ' to update your account on WAYO.LIVE.'
