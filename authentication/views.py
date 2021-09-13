@@ -428,21 +428,21 @@ def get_otp_code(request, username, email, phone_no):
             email_obj = get_otp_email(email)
             verify_msg = 'Your OTP is ' + email_obj.otp + ' to update your account on WAYO.LIVE.'
             subject = 'Update WAYO.LIVE account'
-            try:
-                send_mail(subject, verify_msg, EMAIL_HOST_USER, [email_obj.email], fail_silently=False)
-                response = {
-                    "message": "Verification code sent successfully",
-                    "mobile": email_obj.email
-                }
-                return Response(response, status=200)
+            # try:
+            send_mail(subject, verify_msg, EMAIL_HOST_USER, [email_obj.email], fail_silently=False)
+            response = {
+                "message": "Verification code sent successfully",
+                "mobile": email_obj.email
+            }
+            return Response(response, status=200)
 
-            except Exception as e:
-                print('Error : ', e)
-                response = {
-                    "message": "Verification code was not sent",
-                    "email": email_obj.email
-                }
-                return Response(response, status=400)
+            # except Exception as e:
+            #     print('Error : ', e)
+            #     response = {
+            #         "message": "Verification code was not sent",
+            #         "email": email_obj.email
+            #     }
+            #     return Response(response, status=400)
     else:
         return Response({
             "message": "User does not exist or has not set a phone number and an email"
