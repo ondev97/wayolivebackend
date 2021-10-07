@@ -265,14 +265,14 @@ def TestLoginView(request):
     if user and user.check_password(request.data['password']):
         response['user_id'] = user.id
         response['username'] = user.username
+        response['is_verified'] = True if user.is_band else user.is_verified
         response['completed_user'] = False
         try:
             response['completed_user'] = True if user.first_name and user.last_name and user.email and user.phone_no else False
+            response['phone_no'] = user.phone_no[1:] if user.phone_no[0] == '+' else user.phone_no
+            response['email'] = user.email
         except Exception as e:
             pass
-        response['is_verified'] = True if user.is_band else user.is_verified
-        response['phone_no'] = user.phone_no[1:] if user.phone_no[0] == '+' else user.phone_no
-        response['email'] = user.email
         token = Token.objects.filter(user=user).first()
         if token:
             response['status'] = False if user.is_band else True
