@@ -87,7 +87,7 @@ class updateuser(RetrieveUpdateAPIView):
             raise APIException("Password's not matching")
 
 
-@api_view(['POST'])
+@api_view(['PUT'])
 def updateuserview(request, pk):
     user = User.objects.get(id=pk)
     password = None
