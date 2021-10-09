@@ -1,6 +1,5 @@
 from .base import *
 ALLOWED_HOSTS = ['188.166.229.132', 'api.wayo.live', '128.199.219.213']
-DEBUG = True
 
 DATABASES = {
     'default': {
