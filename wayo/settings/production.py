@@ -1,6 +1,9 @@
 from .base import *
 ALLOWED_HOSTS = ['188.166.229.132', 'api.wayo.live', '128.199.219.213']
 
+# SECURITY WARNING: don't run with debug turned on in production!
+DEBUG = False
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
