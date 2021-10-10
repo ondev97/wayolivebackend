@@ -424,7 +424,7 @@ def audiencedatacollect(request):
 @api_view(['GET'])
 # @permission_classes([IsAuthenticated])
 def latestevent(request):
-    today = date.today()
+    today = date.today() - datetime.timedelta(1)
     event = Event.objects.filter(event_date__gt=today, is_freeze=False).order_by('event_date', 'event_start').first()
     if event:
         serializer = EventSerializer(event)
