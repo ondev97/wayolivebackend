@@ -36,7 +36,7 @@ def listevent(request,pk):
 
 @api_view(['GET'])
 def listallevents(request):
-    today = date.today()  # - datetime.timedelta(1)
+    today = date.today() - datetime.timedelta(1)
     events = Event.objects.filter(event_date__gt=today, is_freeze=False)
     paginator = PageNumberPagination()
     paginator.page_size = 5
