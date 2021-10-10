@@ -49,3 +49,17 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['username', 'email', 'phone_no', 'first_name', 'last_name']
+
+
+class OTPUserTokenSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ('id', 'email', 'is_band', 'is_verified')
+
+
+class OTPCustomTokenSerializer(TokenSerializer):
+    user = OTPUserTokenSerializer(read_only=True)
+
+    class Meta(TokenSerializer.Meta):
+        fields = ('key', 'user')
+

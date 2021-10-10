@@ -1,6 +1,7 @@
 from decouple import config
 from django.contrib.auth.hashers import make_password
 from django.core.exceptions import ObjectDoesNotExist
+from django.db.models import Q
 from django.shortcuts import render
 from django.core.mail import send_mail
 
@@ -35,6 +36,42 @@ class createuser(CreateAPIView):
         instance.save()
 
 
+@api_view(['POST'])
+def createuserview(request):
+    phone_no = None
+    email = None
+    try:
+        phone_no = request.data['phone_no']
+        email = request.data['email']
+    except Exception as e:
+        print(e)
+
+    if phone_no and phone_no[0] == '+':
+        phone_no = phone_no[1:]
+
+    if User.objects.filter(phone_no=phone_no).first():
+        return Response({
+            'phone_no': ['user with this phone number already exists.']
+        }, status=400)
+    #
+    if len(phone_no) < 11 or len(phone_no) > 15 or phone_no[0] == '0':
+        return Response({
+            'phone_no': ['invalid phone number.']
+        }, status=400)
+
+    if User.objects.filter(email=email).first():
+        return Response({
+            'email': ['user with this email already exists.']
+        }, status=400)
+
+    user_seializer = UserSerializerAPI(data=request.data)
+    if user_seializer.is_valid():
+        user_seializer.save(phone_no=phone_no, password=make_password(request.data['password']))
+        return Response(user_seializer.data, status=200)
+    else:
+        return Response(user_seializer.errors, status=400)
+
+
 class updateuser(RetrieveUpdateAPIView):
     # permission_classes = (IsAuthenticated,)
     serializer_class = UserSerializerAPI
@@ -44,41 +81,125 @@ class updateuser(RetrieveUpdateAPIView):
         user = User.objects.get(id=self.kwargs['pk'])
         if user.check_password(self.request.data['password']):
             instance = serializer.save()
-            print(instance.password)
             instance.set_password(instance.password)
             instance.save()
         else:
-            print("not matched")
             raise APIException("Password's not matching")
 
 
+@api_view(['PUT'])
+def updateuserview(request, pk):
+    user = User.objects.get(id=pk)
+    password = None
+    phone_no = None
+    try:
+        password = request.data['password']
+        phone_no = request.data['phone_no']
+    except Exception as e:
+        print(e)
+
+    if user and password and user.check_password(password):
+        serializer = UserSerializerAPI(user, data=request.data)
+        if serializer.is_valid():
+            phone_no = (phone_no[1:] if phone_no[0] == '+' else phone_no) if phone_no else None
+            if phone_no and phone_no[0] == '0':
+                return Response({"message": "you should enter phone number with country code (ex: 93, 94)"}, status=400)
+            if len(phone_no) > 10 and len(phone_no) <= 15:
+                serializer.save(phone_no=phone_no, password=make_password(password))
+                return Response(serializer.data)
+            else:
+                return Response({"phone": "Invalid phone number"}, status=400)
+
+        else:
+            return Response(serializer.errors, status=400)
+    else:
+        return Response({"message": "Invalid password"}, status=401)
+
+
 @api_view(['POST'])
-# @permission_classes([IsAuthenticated])
+def updateuserviewwithOTP(request, pk):
+    user = User.objects.get(id=pk)
+    password = None
+    phone_no = None
+    is_local = None
+    otp = None
+    email = None
+    try:
+        password = request.data['password']
+        phone_no = request.data['phone_no']
+        email = request.data['email']
+        otp = request.data['otp']
+        phone_no = phone_no[1:] if phone_no[0] == '+' else phone_no
+        is_local = phone_no.startswith('94')
+    except Exception as e:
+        print(e)
+
+    # if not (phone_no and password and email and otp):
+    #     return Response({
+    #         "message": "Email, phone number, password and otp code are required"
+    #     }, status=400)
+
+    pre_otp = None
+    if is_local:
+        phone = Phone.objects.get(mobile=phone_no)
+        if phone:
+            pre_otp = phone.otp
+    else:
+        email = Email.objects.get(email=email)
+        if email:
+            pre_otp = email.otp
+
+    if user and password and user.check_password(password):
+        if(otp and pre_otp and otp == pre_otp):
+            serializer = UserSerializerAPI(user, data=request.data)
+            if serializer.is_valid():
+                if phone_no and phone_no[0] == '0':
+                    return Response({"phone": "you should enter phone number with country code (ex: 93, 94)"}, status=400)
+                if len(phone_no) > 10 and len(phone_no) <= 15:
+                    serializer.save(phone_no=phone_no, password=make_password(password))
+                    return Response(serializer.data)
+                else:
+                    return Response({"phone": "Invalid phone number"}, status=400)
+
+            else:
+                return Response(serializer.errors, status=400)
+        else:
+            return Response({
+                "message": "Invalid OTP"
+            }, status=400)
+    else:
+        return Response({"password": "Invalid password"}, status=401)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
 @parser_classes([MultiPartParser, FormParser])
 def updateuserprofile(request, pk):
-    user = UserProfile.objects.get(user_id=pk)
-    if user.check_password(request.data['password']):
-        serializer = UserProfileSerializer(instance=user, data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            serializer.data['user'].pop('password')
-            return Response(serializer.data)
-        else:
-            return Response(serializer.errors)
+    u = User.objects.get(id=pk)
+    user = UserProfile.objects.get(user=u)
+    serializer = UserProfileSerializer(instance=user, data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        serializer.data['user'].pop('password')
+        return Response(serializer.data)
     else:
-        return Response({'invalid credentials'}, status=401)
+        return Response(serializer.errors)
 
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 @parser_classes([MultiPartParser, FormParser])
 def updatebandprofileview(request, pk):
-    user = BandProfile.objects.get(user_id=pk)
+    u = User.objects.get(id=pk)
+    user = BandProfile.objects.get(user=u)
     serializer = BandProfileSerializer(instance=user, data=request.data)
     if serializer.is_valid():
         serializer.save()
         serializer.data['user'].pop('password')
-    return Response(serializer.data)
+        return Response(serializer.data)
+    else:
+        return Response(serializer.errors)
+
 
 
 @api_view(['GET'])
@@ -144,10 +265,14 @@ def TestLoginView(request):
     if user and user.check_password(request.data['password']):
         response['user_id'] = user.id
         response['username'] = user.username
-        response['completed_user'] = True if user.first_name and user.last_name and user.email and user.phone_no else False
         response['is_verified'] = True if user.is_band else user.is_verified
-        response['phone_no'] = user.phone_no
-        response['email'] = user.email
+        response['completed_user'] = False
+        try:
+            response['completed_user'] = True if user.first_name and user.last_name and user.email and user.phone_no else False
+            response['phone_no'] = user.phone_no[1:] if user.phone_no[0] == '+' else user.phone_no
+            response['email'] = user.email
+        except Exception as e:
+            pass
         token = Token.objects.filter(user=user).first()
         if token:
             response['status'] = False if user.is_band else True
@@ -244,6 +369,203 @@ def verify_otp_email(email, otp):
     return response, 400
 
 
+@api_view(['POST'])
+def get_otp_code(request, username, email, phone_no):
+
+    user = User.objects.filter(username=username).first()
+
+    phone_no = phone_no[1:] if phone_no[0] == '+' else phone_no
+
+    if len(phone_no) < 11 or len(phone_no) > 15 or phone_no[0] == '0':
+        return Response({
+            "phone": "Invalid phone number"
+        }, status=400)
+
+    email_user = User.objects.filter(email=email).first()
+    phone_no_user = User.objects.filter(phone_no=phone_no).first()
+
+    if email_user and user != email_user:
+        return Response({
+            "email": "This email is already taken."
+        }, status=400)
+
+    if phone_no_user and user != phone_no_user:
+        return Response({
+            "phone": "This phone number is already taken."
+        }, status=400)
+
+    if user:
+        if not user.check_password(request.data['password']):
+            return Response({
+                'password': 'wrong password'
+            }, status=400)
+
+        if phone_no.startswith('94'):
+            mobile = get_otp(phone_no)
+            verify_msg = 'Your OTP is ' + mobile.otp + ' to update your account on WAYO.LIVE.'
+            params = {
+                'id': config('TEXTIT_ID'),
+                'pw': config('TEXTIT_PW'),
+                'to': mobile.mobile,
+                'text': verify_msg,
+            }
+            url = 'https://www.textit.biz/sendmsg/?' + urllib.parse.urlencode(params)
+            try:
+                response = requests.get(url)
+                # text = "OK:Cr=0.71,Route=CSID-WAYO,MessageID=7171-1627019618,Recipient=754745340,BX=23-152\n"
+                if response.text.split(':')[0] == 'OK':
+                    return Response({
+                        "message": "Verification code sent successfully",
+                        "mobile": mobile.mobile,
+                        "res": response.text
+                    }, status=200)
+                else:
+                    return Response({
+                        "message": "Verification code was not sent",
+                        "mobile": mobile.mobile,
+                        "res": response.text
+                    }, status=400)
+            except Exception as e:
+                print("An exception occurred", e)
+                return Response({"message": "Something is wrong", "mobile": mobile.mobile}, status=503)
+        else:
+            email_obj = get_otp_email(email)
+            verify_msg = 'Your OTP is ' + email_obj.otp + ' to update your account on WAYO.LIVE.'
+            subject = 'Update WAYO.LIVE account'
+            try:
+                send_mail(subject, verify_msg, EMAIL_HOST_USER, [email_obj.email], fail_silently=False)
+                response = {
+                    "message": "Verification code sent successfully",
+                    "mobile": email_obj.email
+                }
+                return Response(response, status=200)
+
+            except Exception as e:
+                print('Error : ', e)
+                response = {
+                    "message": "Verification code was not sent",
+                    "email": email_obj.email,
+                    'test': email
+                }
+                return Response(response, status=400)
+    else:
+        return Response({
+            "message": "User does not exist or has not set a phone number and an email"
+        }, status=400)
+
+
+class reset_session(APIView):
+    @staticmethod
+    def get(request, username):
+        user = User.objects.filter(username=username).first()
+        if user.phone_no and user.email:
+            if user.phone_no.startswith('94') or user.phone_no.startswith('+94'):
+                mobile = get_otp(user.phone_no[1:] if user.phone_no[0] == '+' else user.phone_no)
+                verify_msg = 'Your OTP is ' + mobile.otp + ' to reset login session of your WAYO.LIVE account.'
+                params = {
+                    'id': config('TEXTIT_ID'),
+                    'pw': config('TEXTIT_PW'),
+                    'to': mobile.mobile,
+                    'text': verify_msg,
+                }
+                url = 'https://www.textit.biz/sendmsg/?' + urllib.parse.urlencode(params)
+                try:
+                    response = requests.get(url)
+                    # text = "OK:Cr=0.71,Route=CSID-WAYO,MessageID=7171-1627019618,Recipient=754745340,BX=23-152\n"
+                    if response.text.split(':')[0] == 'OK':
+                        return Response({
+                            "message": "Verification code sent successfully",
+                            "mobile": mobile.mobile[1:] if mobile.mobile[0] == '+' else mobile.mobile,
+                            "res": response.text
+                        }, status=200)
+                    else:
+                        return Response({
+                            "message": "Verification code was not sent",
+                            "mobile": mobile.mobile[1:] if mobile.mobile[0] == '+' else mobile.mobile,
+                            "res": response.text
+                        }, status=400)
+                except:
+                    print("An exception occurred")
+                    return Response({"message": "Something is wrong", "mobile": mobile.mobile}, status=503)
+            else:
+                email_obj = get_otp_email(user.email)
+                verify_msg = 'Your OTP is ' + email_obj.otp + ' to reset login session of your WAYO.LIVE account.'
+                subject = 'Verify WAYO.LIVE account'
+                try:
+                    send_mail(subject, verify_msg, EMAIL_HOST_USER, [user.email], fail_silently=False)
+                    response = {
+                        "message": "Verification code sent successfully",
+                        "mobile": email_obj.email
+                    }
+                    return Response(response, status=200)
+
+                except Exception as e:
+                    print('Error : ', e)
+                    response = {
+                        "message": "Verification code was not sent",
+                        "email": email_obj.email
+                    }
+                    return Response(response, status=400)
+        else:
+            return Response({
+                "msg": "User has not set a phone number and an email"
+            }, status=400)
+
+    @staticmethod
+    def post(request, username):
+        user = User.objects.filter(username=username).first()
+        if user:
+            if user.phone_no and user.email:
+                if user.phone_no.startswith('94'):
+                    mobile = Phone.objects.get(mobile=user.phone_no)
+                    if mobile.otp == request.data['otp']:
+                        user_token = Token.objects.filter(user=user)
+                        if user_token:
+                            user_token.delete()
+                            token = Token.objects.create(user=user)
+                            serializer = OTPCustomTokenSerializer(token)
+                            return Response({
+                                "msg": "Login session has been reset successfully",
+                                "token": serializer.data
+                            }, status=200)
+                        else:
+                            return Response({
+                                "msg": "Login session with this username not found"
+                            }, status=404)
+                    else:
+                        return Response({
+                            "msg": "OTP is wrong"
+                        }, status=400)
+                else:
+                    email_obj = Email.objects.get(email=user.email)
+                    if email_obj.otp == request.data['otp']:
+                        user_token = Token.objects.filter(user=user)
+                        if user_token:
+                            user_token.delete()
+                            token = Token.objects.create(user=user)
+                            serializer = OTPCustomTokenSerializer(token)
+                            return Response({
+                                "msg": "Login session has been reset successfully",
+                                "token": serializer.data
+                            }, status=200)
+                        else:
+                            return Response({
+                                "msg": "Login session with this username not found"
+                            }, status=404)
+                    else:
+                        return Response({
+                            "msg": "OTP is wrong"
+                        }, status=400)
+            else:
+                return Response({
+                    "msg": "User has not set a phone number and an email"
+                }, status=400)
+        else:
+            return Response({
+                "msg": "Invalid username"
+            }, status=401)
+
+
 class activate_user(APIView):
     @staticmethod
     def get(request, phone):
@@ -279,11 +601,13 @@ class activate_user(APIView):
     def post(request, phone):
         response, status = verify_otp(phone[1:] if phone[0] == '+' else phone, request.data["otp"])
         if response['is_verified']:
-            user = User.objects.get(phone_no=phone[1:] if phone[0] == '+' else phone)
-            print(user)
+            user = User.objects.get(Q(phone_no=phone[1:] if phone[0] == '+' else '+' + phone) | Q(phone_no=phone))
+            token = Token.objects.create(user=user)
             user.is_verified = True
             user.save()
+            serializer = OTPCustomTokenSerializer(token)
             response['message'] = "You are verified"
+            response['token'] = serializer.data
         return Response(response, status=status)
 
 @permission_classes([IsAuthenticated])
@@ -314,37 +638,30 @@ class activate_user_by_email(APIView):
         response, status = verify_otp_email(email, request.data["otp"])
         if response['is_verified']:
             user = User.objects.get(email=email)
-            print(user)
+            token = Token.objects.create(user=user)
+            print('Token', token)
             user.is_verified = True
             user.save()
+            serializer = OTPCustomTokenSerializer(token)
             response['message'] = "You are verified"
+            response['token'] = serializer.data
         return Response(response, status=status)
 
 @permission_classes([IsAuthenticated])
 @api_view(['POST'])
 @parser_classes([MultiPartParser, FormParser])
 def users_registration(request):
-    excel_file = request.FILES["excel_file"]
-    wb = openpyxl.load_workbook(excel_file)
-    worksheet = wb["Sheet1"]
-    worksheet.delete_rows(worksheet.min_row, 1)
-
-    excel_data = list()
-    for row in worksheet.iter_rows():
-        row_data = list()
-        for cell in row:
-            row_data.append(str(cell.value))
-        excel_data.append(row_data)
+    usernames = request.data['USERNAME']
+    passwords = request.data['PASSWORD']
 
     users = [
-        User(username=row[0], password=make_password(row[1]))        #, first_name=row[2], last_name=row[3], email=row[4], phone_no=row[5])
-        for row in excel_data
+        User(username=usernames[row], password=make_password(passwords[row]))
+        for row in range(len(usernames))
     ]
     not_saved = list()
-    i = 2
+    i = 1
     try:
         User.objects.bulk_create(users)
-
     except:
         for user in users:
             try:
@@ -354,7 +671,7 @@ def users_registration(request):
             i+=1
 
     return Response({
-        "count_of_all_users": len(excel_data),
+        "count_of_all_users": len(usernames),
         "not_saved_lines": not_saved
     }, status=200)
 
