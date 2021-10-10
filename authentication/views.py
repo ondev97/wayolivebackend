@@ -286,7 +286,7 @@ class activate_user(APIView):
             response['message'] = "You are verified"
         return Response(response, status=status)
 
-
+@permission_classes([IsAuthenticated])
 class activate_user_by_email(APIView):
     @staticmethod
     def get(request, email):
@@ -320,9 +320,8 @@ class activate_user_by_email(APIView):
             response['message'] = "You are verified"
         return Response(response, status=status)
 
-
+@permission_classes([IsAuthenticated])
 @api_view(['POST'])
-# @permission_classes([IsAuthenticated])
 @parser_classes([MultiPartParser, FormParser])
 def users_registration(request):
     excel_file = request.FILES["excel_file"]
