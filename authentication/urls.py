@@ -19,4 +19,5 @@ urlpatterns = [
     path('resetsession/<str:username>/', views.reset_session.as_view()),
     path('getotp/<str:username>/<str:email>/<str:phone_no>/', views.get_otp_code),
     path('reg_users/',views.users_registration),
+    path('unverified/',views.getnotverified),
 ]

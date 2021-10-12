@@ -17,6 +17,7 @@ from rest_framework.authtoken.models import Token
 from show.models import Enrollment
 from wayo.settings.base import EMAIL_HOST_USER
 from .serializer import *
+from django.db.models import Q
 
 from .models import *
 
@@ -675,4 +676,12 @@ def users_registration(request):
         "not_saved_lines": not_saved
     }, status=200)
 
+
+@api_view(['GET'])
+#@permission_classes([IsAuthenticated])
+def getnotverified(request):
+    user = User.objects.filter(is_superuser= False)
+    not_verified = UserProfile.objects.filter(~Q(user=user))
+    serializer = UserProfileSerializer(not_verified,many=True)
+    return Response (serializer.data)
 
