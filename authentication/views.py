@@ -27,6 +27,10 @@ import openpyxl
 import urllib
 import requests
 
+from rest_framework.viewsets import ReadOnlyModelViewSet
+from drf_renderer_xlsx.mixins import XLSXFileMixin
+from drf_renderer_xlsx.renderers import XLSXRenderer
+
 
 class createuser(CreateAPIView):
     serializer_class = UserSerializerAPI
@@ -648,9 +652,9 @@ class activate_user_by_email(APIView):
             response['token'] = serializer.data
         return Response(response, status=status)
 
-@permission_classes([IsAuthenticated])
+
 @api_view(['POST'])
-@parser_classes([MultiPartParser, FormParser])
+@permission_classes([IsAuthenticated])
 def users_registration(request):
     usernames = request.data['USERNAME']
     passwords = request.data['PASSWORD']
@@ -677,12 +681,55 @@ def users_registration(request):
     }, status=200)
 
 
-@api_view(['GET'])
-#@permission_classes([IsAuthenticated])
-def getnotverified(request):
-    #user = User.objects.filter(Q(is_verified=False) & Q(is_superuser=False))
-    user = User.objects.filter(userprofile=None)
-    #not_verified = UserProfile.objects.filter(~Q(user=user))
-    serializer = UserProfileSerializer(user,many=True)
-    return Response (serializer.data)
+class MyExampleViewSet(XLSXFileMixin, ReadOnlyModelViewSet):
+    queryset = User.objects.filter(userprofile=None, is_superuser=False, is_band=False)
+    serializer_class = UserSerializer
+    renderer_classes = (XLSXRenderer,)
+    filename = 'my_export.xlsx'
+    column_header = {
+        'column_width': [30, 30, 30, 30, 30],
+        'height': 25,
+        'style': {
+            'fill': {
+                'fill_type': 'solid',
+                'start_color': 'FFCCFFCC',
+            },
+            'alignment': {
+                'horizontal': 'center',
+                'vertical': 'center',
+                'wrapText': True,
+                'shrink_to_fit': True,
+            },
+            'border_side': {
+                'border_style': 'thin',
+                'color': 'FF000000',
+            },
+            'font': {
+                'name': 'Arial',
+                'size': 14,
+                'bold': True,
+                'color': 'FF000000',
+            },
+        }
+    }
+    body = {
+        'style': {
+            'alignment': {
+                'vertical': 'center',
+                'wrapText': True,
+                'shrink_to_fit': True,
+            },
+            'border_side': {
+                'border_style': 'thin',
+                'color': 'FF000000',
+            },
+            'font': {
+                'name': 'Arial',
+                'size': 10,
+                'bold': False,
+                'color': 'FF000000',
+            }
+        },
+        'height': 20,
+    }
 
