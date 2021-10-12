@@ -680,7 +680,8 @@ def users_registration(request):
 @api_view(['GET'])
 #@permission_classes([IsAuthenticated])
 def getnotverified(request):
-    user = User.objects.filter(Q(is_verified=False) & Q(is_superuser=False))
+    #user = User.objects.filter(Q(is_verified=False) & Q(is_superuser=False))
+    user = User.objects.filter(userprofile=None)
     #not_verified = UserProfile.objects.filter(~Q(user=user))
     serializer = UserProfileSerializer(user,many=True)
     return Response (serializer.data)
