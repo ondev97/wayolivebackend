@@ -9,6 +9,7 @@ from django.core.mail import send_mail
 from rest_framework.decorators import api_view, permission_classes, parser_classes
 from rest_framework.exceptions import APIException
 from rest_framework.generics import CreateAPIView, RetrieveUpdateAPIView
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser, FormParser, FileUploadParser
@@ -16,6 +17,7 @@ from rest_framework.views import APIView
 from rest_framework.authtoken.models import Token
 from show.models import Enrollment
 from wayo.settings.base import EMAIL_HOST_USER
+from .filter import UserProfileFilter
 from .serializer import *
 from django.db.models import Q
 
@@ -257,10 +259,15 @@ def getusersnotinevent(request, id):
     for e in enr:
         enrollments.append(e.user.id)
     users = UserProfile.objects.exclude(id__in=enrollments)
-    serializer = UserProfileSerializer(users, many=True)
+    # users = UserProfile.objects.all()
+    filtered_users = UserProfileFilter(request.GET, queryset=users)
+    paginator = PageNumberPagination()
+    paginator.page_size = 5
+    result_page = paginator.paginate_queryset(filtered_users.qs, request)
+    serializer = UserProfileSerializer(result_page, many=True)
     for i in range(len(serializer.data)):
         serializer.data[i]['user'].pop('password')
-    return Response(serializer.data)
+    return paginator.get_paginated_response(serializer.data)
 
 
 @api_view(['POST'])
